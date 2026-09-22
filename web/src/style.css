@@ -219,6 +219,67 @@ img {
   transition: background 0.2s, transform 0.2s;
 }
 
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 22px 0 2px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #151515;
+}
+
+.auth-tabs button {
+  padding: 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 700;
+}
+
+.auth-tabs button.active {
+  background: white;
+  color: #202124;
+}
+
+.guest-login-button {
+  width: 100%;
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+  background: transparent;
+  color: white;
+  font-weight: 700;
+}
+
+.guest-login-button:hover {
+  border-color: var(--accent);
+  color: #ffd3c2;
+}
+
+.guest-login-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 -8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.82rem;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .google-login-button:hover {
   background: #f1f3f4;
   transform: translateY(-1px);

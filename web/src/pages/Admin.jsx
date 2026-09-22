@@ -124,9 +124,14 @@ export function AdminUsers({ user }) {
               </div>
             )}
             rows={body.users.map((item) => ({
-              key: item.id || item.email,
+              key: item.id || item.username || item.email,
               user: item,
-              cells: [item.name, item.email, item.role, item.stickerCreations],
+              cells: [
+                item.name,
+                item.isGuest ? "Khách" : item.username || item.email || "—",
+                item.role,
+                item.stickerCreations,
+              ],
             }))}
           />
         )}
@@ -154,9 +159,8 @@ export function AdminUsers({ user }) {
               Email
               <input
                 type="email"
-                value={editingUser.email}
+                value={editingUser.email || ""}
                 onChange={(event) => setEditingUser({ ...editingUser, email: event.target.value })}
-                required
               />
             </label>
             <label>

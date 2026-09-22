@@ -89,7 +89,7 @@ export default function Header({ user, transparent = false }) {
         {showUserMenu && (
           <div className="user-menu">
             <strong>{user.name}</strong>
-            <span>{user.email}</span>
+            <span>{user.isGuest ? "Tài khoản khách" : user.username || user.email}</span>
             <button type="button" onClick={logout}>
               Đăng xuất
             </button>
@@ -135,7 +135,7 @@ export default function Header({ user, transparent = false }) {
               </div>
               <div>
                 <strong>{user.name}</strong>
-                <span>{user.email}</span>
+                <span>{user.isGuest ? "Tài khoản khách" : user.username || user.email}</span>
               </div>
               <button type="button" onClick={logout}>
                 Đăng xuất
