@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { api, apiUrl } from "../api.js";
 
-export default function Landing() {
+export default function Landing({ onGuestLogin }) {
   const [showLogin, setShowLogin] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -10,6 +12,7 @@ export default function Landing() {
 
   function openLogin() {
     setError("");
+    setIsRegistering(false);
     setShowLogin(true);
   }
 
@@ -24,14 +27,16 @@ export default function Landing() {
     setError("");
     setIsSubmitting(true);
     try {
-      await api("/api/auth/login", {
+      await api(isRegistering ? "/api/auth/register" : "/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(
+          isRegistering ? { name, email, password } : { email, password },
+        ),
       });
       window.location.assign("/app");
     } catch (loginError) {
-      setError(loginError.message || "Đăng nhập không thành công.");
+      setError(loginError.message || "Thao tác không thành công.");
     } finally {
       setIsSubmitting(false);
     }
@@ -51,6 +56,12 @@ export default function Landing() {
             <button className="primary hero-cta" type="button" onClick={openLogin}>
               Truy cập ngay
             </button>
+            <button className="guest-cta" type="button" onClick={() => {
+              onGuestLogin();
+              window.location.assign("/app");
+            }}>
+              Tiếp tục với tư cách khách
+            </button>
           </div>
         </div>
 
@@ -63,8 +74,28 @@ export default function Landing() {
               ×
             </button>
             <h2>Bắt đầu với StickAI</h2>
-            <p className="modal-intro">Đăng nhập bằng email và mật khẩu để tiếp tục.</p>
+            <p className="modal-intro">
+              {isRegistering
+                ? "Tạo tài khoản bằng email bất kỳ và mật khẩu của bạn."
+                : "Đăng nhập bằng email và mật khẩu để tiếp tục."}
+            </p>
             <form onSubmit={handleLogin}>
+              {isRegistering && (
+                <label>
+                  Tên hiển thị
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    autoComplete="name"
+                    placeholder="Tên của bạn"
+                    minLength={2}
+                    maxLength={80}
+                    required
+                    disabled={isSubmitting}
+                  />
+                </label>
+              )}
               <label>
                 Email
                 <input
@@ -91,9 +122,26 @@ export default function Landing() {
               </label>
               {error && <p className="form-message error">{error}</p>}
               <button className="primary" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
+                {isSubmitting
+                  ? isRegistering
+                    ? "Đang đăng ký..."
+                    : "Đang đăng nhập..."
+                  : isRegistering
+                    ? "Đăng ký"
+                    : "Đăng nhập"}
               </button>
             </form>
+            <button
+              className="login-switch"
+              type="button"
+              onClick={() => {
+                setIsRegistering((registering) => !registering);
+                setError("");
+              }}
+              disabled={isSubmitting}
+            >
+              {isRegistering ? "Đã có tài khoản? Đăng nhập" : "Chưa có tài khoản? Đăng ký"}
+            </button>
             <div className="login-divider"><span>hoặc</span></div>
             <a className="google-login-button" href={apiUrl("/api/auth/google?returnTo=/app")}>
               <span className="google-login-icon" aria-hidden="true">G</span>

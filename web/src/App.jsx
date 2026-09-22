@@ -45,6 +45,7 @@ function Protected({ user, checking, children }) {
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [isGuest, setIsGuest] = useState(() => localStorage.getItem("stickai_guest") === "true");
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -57,47 +58,59 @@ export default function App() {
       .finally(() => setChecking(false));
   }, []);
 
+  const currentUser = user || (isGuest ? {
+    id: "guest",
+    name: "Khách",
+    email: "Chế độ khách",
+    role: "guest",
+  } : null);
+
+  function enterGuestMode() {
+    localStorage.setItem("stickai_guest", "true");
+    setIsGuest(true);
+  }
+
   return (
     <ErrorBox>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Landing onGuestLogin={enterGuestMode} />} />
         <Route
           path="/app"
           element={
-            <Protected user={user} checking={checking}>
-              <Collection user={user} />
+            <Protected user={currentUser} checking={checking}>
+              <Collection user={currentUser} />
             </Protected>
           }
         />
         <Route
           path="/history"
           element={
-            <Protected user={user} checking={checking}>
-              <History user={user} />
+            <Protected user={currentUser} checking={checking}>
+              <History user={currentUser} />
             </Protected>
           }
         />
         <Route
           path="/admin"
           element={
-            <Protected user={user} checking={checking}>
-              <Admin user={user} />
+            <Protected user={currentUser} checking={checking}>
+              <Admin user={currentUser} />
             </Protected>
           }
         />
         <Route
           path="/admin/users"
           element={
-            <Protected user={user} checking={checking}>
-              <AdminUsers user={user} />
+            <Protected user={currentUser} checking={checking}>
+              <AdminUsers user={currentUser} />
             </Protected>
           }
         />
         <Route
           path="/admin/stickers"
           element={
-            <Protected user={user} checking={checking}>
-              <AdminStickers user={user} />
+            <Protected user={currentUser} checking={checking}>
+              <AdminStickers user={currentUser} />
             </Protected>
           }
         />

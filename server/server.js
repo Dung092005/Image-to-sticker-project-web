@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   ensureSchema,
   loginWithPassword,
+  registerWithPassword,
   upsertGoogleUser,
   createSession,
   getUserBySession,
@@ -420,6 +421,33 @@ createServer(async (req, res) => {
         { "Set-Cookie": sessionCookie(sessionId) },
         req
       );
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/auth/register") {
+      const body = await readBody(req);
+      const name = String(body?.name || "").trim();
+      const email = String(body?.email || "").trim().toLowerCase();
+      const password = String(body?.password || "");
+      if (!body) return send(res, 400, { message: "Body JSON không hợp lệ." }, {}, req);
+      if (name.length < 2 || name.length > 80) {
+        return send(res, 400, { message: "Tên phải có từ 2 đến 80 ký tự." }, {}, req);
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return send(res, 400, { message: "Email không hợp lệ." }, {}, req);
+      }
+      if (password.length < 6 || password.length > 128) {
+        return send(res, 400, { message: "Mật khẩu phải có từ 6 đến 128 ký tự." }, {}, req);
+      }
+      try {
+        const user = await registerWithPassword(name, email, password);
+        const sessionId = await createSession(user.id);
+        return send(res, 201, { user }, { "Set-Cookie": sessionCookie(sessionId) }, req);
+      } catch (error) {
+        if (error?.code === "23505") {
+          return send(res, 409, { message: "Email này đã được đăng ký." }, {}, req);
+        }
+        throw error;
+      }
     }
 
     if (req.method === "POST" && url.pathname === "/api/auth/logout") {

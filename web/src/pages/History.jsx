@@ -15,6 +15,10 @@ export default function History({ user }) {
     let cancelled = false;
 
     async function load() {
+      if (user.role === "guest") {
+        setLoading(false);
+        return;
+      }
       try {
         const [data, cardsData] = await Promise.all([
           api("/api/history"),
@@ -50,6 +54,11 @@ export default function History({ user }) {
         <p className="eyebrow">Lịch sử</p>
         <h1>Lịch sử stickers</h1>
 
+        {user.role === "guest" && (
+          <p className="empty">
+            Chế độ khách không lưu lịch sử. Hãy đăng nhập hoặc đăng ký để xem và lưu sticker.
+          </p>
+        )}
         {loading && <p>Đang tải lịch sử...</p>}
         {error && <p className="error">{error}</p>}
 

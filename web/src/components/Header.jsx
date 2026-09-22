@@ -21,7 +21,10 @@ export default function Header({ user, transparent = false }) {
   }, [transparent]);
 
   async function logout() {
-    await api("/api/auth/logout", { method: "POST" });
+    localStorage.removeItem("stickai_guest");
+    if (user.role !== "guest") {
+      await api("/api/auth/logout", { method: "POST" });
+    }
     window.location.assign("/");
   }
 
@@ -91,7 +94,7 @@ export default function Header({ user, transparent = false }) {
             <strong>{user.name}</strong>
             <span>{user.email}</span>
             <button type="button" onClick={logout}>
-              Đăng xuất
+              {user.role === "guest" ? "Thoát chế độ khách" : "Đăng xuất"}
             </button>
           </div>
         )}
@@ -138,7 +141,7 @@ export default function Header({ user, transparent = false }) {
                 <span>{user.email}</span>
               </div>
               <button type="button" onClick={logout}>
-                Đăng xuất
+                {user.role === "guest" ? "Thoát chế độ khách" : "Đăng xuất"}
               </button>
             </div>
           </aside>

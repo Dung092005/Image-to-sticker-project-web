@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { Pool } from "pg";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
@@ -187,12 +187,42 @@ export async function loginWithPassword(email, password) {
     [String(email || "").trim()],
   );
   const row = result.rows[0];
-  if (!row || !row.password || row.password !== password) return null;
+  if (!row || !row.password || !verifyPassword(password, row.password)) return null;
   await getPool().query(
     `UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = $1`,
     [row.id],
   );
   return mapUser(row);
+}
+
+function hashPassword(password) {
+  const salt = randomBytes(16).toString("hex");
+  const hash = scryptSync(password, salt, 64).toString("hex");
+  return `scrypt:${salt}:${hash}`;
+}
+
+function verifyPassword(password, storedPassword) {
+  if (storedPassword.startsWith("scrypt:")) {
+    const [, salt, storedHash] = storedPassword.split(":");
+    if (!salt || !storedHash) return false;
+    const derivedHash = scryptSync(password, salt, 64);
+    const expectedHash = Buffer.from(storedHash, "hex");
+    return expectedHash.length === derivedHash.length && timingSafeEqual(expectedHash, derivedHash);
+  }
+  // Keep existing demo accounts and older accounts usable after enabling hashing.
+  return storedPassword === password;
+}
+
+export async function registerWithPassword(name, email, password) {
+  const result = await getPool().query(
+    `
+      INSERT INTO users (email, name, role, password, last_login_at)
+      VALUES ($1, $2, 'user', $3, NOW())
+      RETURNING id, email, name, avatar_url, created_at, sticker_creations, role
+    `,
+    [email.trim().toLowerCase(), name.trim(), hashPassword(password)],
+  );
+  return mapUser(result.rows[0]);
 }
 
 export async function upsertGoogleUser({ email, name, avatarUrl, isAdmin = false }) {

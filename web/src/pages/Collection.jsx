@@ -72,7 +72,11 @@ export default function Collection({ user }) {
     setPhoto(null);
     setPhotoPreview("");
     setCustomPrompt("");
-    setFormMessage("");
+    setFormMessage(
+      user.role === "guest"
+        ? "Vui lòng đăng nhập hoặc đăng ký để tạo và lưu sticker."
+        : "",
+    );
   }
 
   function closeCreateModal() {
@@ -235,6 +239,12 @@ export default function Collection({ user }) {
       <section className="content">
         <p className="eyebrow">Khám phá bộ sưu tập</p>
         <h2>Danh mục stickers</h2>
+        {user.role === "guest" && (
+          <p className="guest-notice">
+            Bạn đang xem với tư cách khách. Có thể xem bộ sưu tập, nhưng cần đăng nhập hoặc đăng ký
+            để tạo và lưu sticker.
+          </p>
+        )}
         {loading && <p>Đang tải bộ sticker...</p>}
         {error && <p className="error">{error}</p>}
 
@@ -296,6 +306,7 @@ export default function Collection({ user }) {
                 accept="image/png,image/jpeg,image/webp"
                 onChange={choosePhoto}
                 required
+                disabled={user.role === "guest"}
               />
               <button className="upload-box" type="button" onClick={() => photoInputRef.current?.click()}>
                 {photoPreview ? <img src={photoPreview} alt="Ảnh đã chọn" /> : "Chọn ảnh PNG, JPG hoặc WEBP · tối đa 10MB"}
@@ -310,11 +321,12 @@ export default function Collection({ user }) {
                 value={customPrompt}
                 placeholder="Ví dụ: thêm tư thế giơ tay chào, giữ nguyên kiểu tóc, dùng màu sắc tươi sáng..."
                 onChange={(event) => setCustomPrompt(event.target.value)}
+                disabled={user.role === "guest"}
               />
             </label>
 
             {formMessage && <p className={`form-message ${formMessage.startsWith("Đã nhận") ? "success" : ""}`}>{formMessage}</p>}
-            <button className="primary" type="submit" disabled={submitting}>
+            <button className="primary" type="submit" disabled={submitting || user.role === "guest"}>
               {submitting ? "Đang xử lý..." : "Tạo bộ sticker"}
             </button>
           </form>
