@@ -43,6 +43,18 @@ function Protected({ user, checking, children }) {
   return children;
 }
 
+function PublicRoute({ user, checking, children }) {
+  if (checking) {
+    return (
+      <main className="app-page">
+        <p className="page-loading">Đang tải...</p>
+      </main>
+    );
+  }
+  if (user) return <Navigate to="/app" replace />;
+  return children;
+}
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
@@ -60,7 +72,14 @@ export default function App() {
   return (
     <ErrorBox>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route
+          path="/"
+          element={
+            <PublicRoute user={user} checking={checking}>
+              <Landing />
+            </PublicRoute>
+          }
+        />
         <Route
           path="/app"
           element={
