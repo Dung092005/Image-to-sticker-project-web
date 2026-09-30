@@ -257,7 +257,7 @@ export function AdminStickers({ user }) {
               id: "",
               title: "",
               alias: "",
-              image: "/sticker-hero-illustrated.png",
+              image: "/hero-slide.png",
               description: "",
               prompt: "",
             });
@@ -296,7 +296,7 @@ export function AdminStickers({ user }) {
               key: card.id,
               card,
               cells: [
-                <img className="table-image-preview" src={resolveCardImage(card.image)} alt={card.title} />,
+                <img className="table-image-preview" src={resolveCardImage(card.image)} alt={card.title} onError={(event) => { event.currentTarget.src = "/hero-slide.png"; }} />,
                 card.title,
                 card.alias,
                 card.description,
@@ -337,7 +337,7 @@ export function AdminStickers({ user }) {
               Ảnh danh mục (URL hoặc đường dẫn public)
               <input
                 value={editing.image || ""}
-                placeholder="/sticker-hero-illustrated.png"
+                placeholder="/hero-slide.png"
                 onChange={(event) => setEditing({ ...editing, image: event.target.value })}
                 required
               />

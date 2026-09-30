@@ -260,6 +260,10 @@ export default function Collection({ user }) {
                     <img
                       src={resolveCardImage(card.image)}
                       alt={card.title}
+                      onError={(event) => {
+                        if (event.currentTarget.src.endsWith("/hero-slide.png")) return;
+                        event.currentTarget.src = "/hero-slide.png";
+                      }}
                     />
                   )}
                   <div className="card-info">

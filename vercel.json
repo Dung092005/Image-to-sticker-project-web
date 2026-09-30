@@ -1,8 +1,8 @@
 {
-  "installCommand": "npm ci",
-  "buildCommand": "npm run build",
+  "installCommand": "npm install --prefix web",
+  "buildCommand": "npm run build --prefix web",
   "outputDirectory": "web/dist",
-  "framework": "vite",
+  "framework": null,
   "rewrites": [
     {
       "source": "/api/:path*",

@@ -243,7 +243,7 @@ export async function createCard(patch) {
       String(patch.title).trim(),
       String(patch.alias).trim(),
       String(patch.description).trim(),
-      String(patch.image || "/sticker-hero-illustrated.png").trim(),
+      String(patch.image || "/hero-slide.png").trim(),
       String(patch.year || new Date().getFullYear()).trim(),
       String(patch.status || "16 biểu cảm").trim(),
       String(patch.prompt || "").trim(),
