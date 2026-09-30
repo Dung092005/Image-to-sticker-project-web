@@ -233,9 +233,9 @@ export async function createCard(patch) {
   const result = await getPool().query(
     `
       INSERT INTO sticker_cards
-        (id, title, alias, description, image, topic, year, status, prompt, highlight)
+        (id, title, alias, description, image, year, status, prompt, highlight)
       VALUES
-        ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)
+        ($1, $2, $3, $4, $5, $6, $7, $8, TRUE)
       RETURNING id, title, alias, description, image, year, status, prompt, highlight, created_at, updated_at
     `,
     [
@@ -244,7 +244,6 @@ export async function createCard(patch) {
       String(patch.alias).trim(),
       String(patch.description).trim(),
       String(patch.image || "/sticker-hero-illustrated.png").trim(),
-      "", // Keep the required column in the shared Sticker-WEBAPP schema empty.
       String(patch.year || new Date().getFullYear()).trim(),
       String(patch.status || "16 biểu cảm").trim(),
       String(patch.prompt || "").trim(),
