@@ -21,9 +21,6 @@ class ErrorBox extends Component {
       return (
         <main className="app-page">
           <p className="page-loading error">Lỗi giao diện: {this.state.message}</p>
-          <p className="page-loading">
-            Mở F12 → Console rồi gửi ảnh lỗi nếu vẫn trắng trang.
-          </p>
         </main>
       );
     }

@@ -256,9 +256,9 @@ export default function Collection({ user }) {
                 aria-label={`Tạo sticker theo bộ ${card.title}`}
               >
                 <div className="card-art">
-                  {(card.image || card.imageUrl || card.image_url) && (
+                  {card.image && (
                     <img
-                      src={resolveCardImage(card.image || card.imageUrl || card.image_url)}
+                      src={resolveCardImage(card.image)}
                       alt={card.title}
                     />
                   )}

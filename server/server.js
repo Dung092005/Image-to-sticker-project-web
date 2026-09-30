@@ -7,7 +7,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   ensureSchema,
-  loginWithPassword,
   upsertGoogleUser,
   createSession,
   getUserBySession,
@@ -166,7 +165,12 @@ function send(res, status, body, extraHeaders = {}, req = null) {
 
 async function readBody(req) {
   let text = "";
-  for await (const chunk of req) text += chunk;
+  for await (const chunk of req) {
+    text += chunk;
+    if (text.length > 1024 * 1024) {
+      throw Object.assign(new Error("Kích thước request quá lớn."), { statusCode: 413 });
+    }
+  }
   try {
     return JSON.parse(text || "{}");
   } catch {
@@ -174,9 +178,16 @@ async function readBody(req) {
   }
 }
 
-async function readBuffer(req) {
+async function readBuffer(req, maxBytes) {
   const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
+  let size = 0;
+  let tooLarge = false;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > maxBytes) tooLarge = true;
+    else if (!tooLarge) chunks.push(chunk);
+  }
+  if (tooLarge) throw Object.assign(new Error("Kích thước request quá lớn."), { statusCode: 413 });
   return Buffer.concat(chunks);
 }
 
@@ -297,16 +308,15 @@ async function currentUser(req) {
   return getUserBySession(cookies(req).stickai_session);
 }
 
-const port = Number(process.env.PORT || 3000);
-
 await loadEnvFiles();
 writeGcpCredentialsFromEnv();
 await ensureSchema();
 await pingDatabase();
 
+const port = Number(process.env.PORT || 3000);
+
 createServer(async (req, res) => {
-  const url = new URL(req.url, "http://localhost:3000");
-  console.log(req.method, url.pathname);
+  const url = new URL(req.url, `http://localhost:${port}`);
 
   if (req.method === "OPTIONS") {
     res.writeHead(204, corsHeaders(req));
@@ -336,7 +346,7 @@ createServer(async (req, res) => {
       }
       const state = randomBytes(32).toString("base64url");
       const returnTo = safeReturnTo(url.searchParams.get("returnTo"));
-      const redirectUri = process.env.GOOGLE_REDIRECT_URI || "http://localhost:3000/api/auth/google/callback";
+      const redirectUri = process.env.GOOGLE_REDIRECT_URI || `http://localhost:${port}/api/auth/google/callback`;
       const googleUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
       googleUrl.searchParams.set("client_id", clientId);
       googleUrl.searchParams.set("redirect_uri", redirectUri);
@@ -401,25 +411,9 @@ createServer(async (req, res) => {
           ],
         }).end();
       } catch (error) {
-        console.error("Google OAuth callback failed:", error);
+        console.error("Google OAuth callback failed:", error.message || error);
         return fail("google_callback_failed");
       }
-    }
-
-    if (req.method === "POST" && url.pathname === "/api/auth/login") {
-      const body = await readBody(req);
-      if (!body) return send(res, 400, { message: "Body JSON không hợp lệ." }, {}, req);
-      const user = await loginWithPassword(body.email, body.password);
-      if (!user) return send(res, 401, { message: "Email hoặc mật khẩu không đúng." }, {}, req);
-
-      const sessionId = await createSession(user.id);
-      return send(
-        res,
-        200,
-        { user },
-        { "Set-Cookie": sessionCookie(sessionId) },
-        req
-      );
     }
 
     if (req.method === "POST" && url.pathname === "/api/auth/logout") {
@@ -462,7 +456,7 @@ createServer(async (req, res) => {
       const user = await currentUser(req);
       if (!user) return send(res, 401, { message: "Vui lòng đăng nhập để tạo sticker." }, {}, req);
 
-      const body = parseMultipart(await readBuffer(req), req.headers["content-type"] || "");
+      const body = parseMultipart(await readBuffer(req, 11 * 1024 * 1024), req.headers["content-type"] || "");
       if (!body?.file || !body.fields.cardId) {
         return send(res, 400, { message: "Cần chọn bộ sticker và tải một ảnh lên." }, {}, req);
       }
@@ -582,12 +576,15 @@ createServer(async (req, res) => {
     return send(res, 404, { message: "Không tìm thấy API này." }, {}, req);
   } catch (error) {
     console.error(error);
-    return send(res, 500, { message: "Server gặp lỗi. Xem terminal để biết chi tiết." }, {}, req);
+    const detail = process.env.NODE_ENV === "production"
+      ? "Server gặp lỗi. Vui lòng thử lại sau."
+      : "Server gặp lỗi. Xem terminal để biết chi tiết.";
+    return send(res, error.statusCode || 500, {
+      message: error.statusCode === 413
+        ? "Request vượt quá giới hạn kích thước."
+        : detail,
+    }, {}, req);
   }
 }).listen(port, "0.0.0.0", () => {
-  console.log(`StickAI API: http://localhost:${port}`);
-  console.log(`Database: Supabase Postgres`);
-  console.log(`APP_ORIGIN: ${process.env.APP_ORIGIN || "(default localhost)"}`);
-  console.log(`Python: ${process.env.STICKAI_PYTHON || "(default)"}`);
-  console.log(`GCP_PROJECT_ID: ${process.env.GCP_PROJECT_ID || "(missing)"}`);
+  console.log(`StickAI API listening on port ${port}`);
 });
