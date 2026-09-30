@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { Pool } from "pg";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
@@ -43,10 +43,12 @@ function getPool() {
 function mapUser(row) {
   return {
     id: String(row.id),
-    email: row.email,
+    email: row.email ?? null,
+    username: row.username ?? null,
     name: row.name,
     avatarUrl: row.avatar_url ?? null,
     role: row.role === "admin" ? "admin" : "user",
+    isGuest: Boolean(row.is_guest),
     stickerCreations: Number(row.sticker_creations ?? 0),
     createdAt: new Date(row.created_at).toISOString(),
   };
@@ -92,7 +94,8 @@ export async function ensureSchema() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id BIGSERIAL PRIMARY KEY,
-        email TEXT NOT NULL UNIQUE,
+        email TEXT UNIQUE,
+        username TEXT UNIQUE,
         name TEXT NOT NULL,
         avatar_url TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -105,7 +108,13 @@ export async function ensureSchema() {
         ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ,
         ADD COLUMN IF NOT EXISTS sticker_creations INTEGER NOT NULL DEFAULT 0,
         ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user',
-        ADD COLUMN IF NOT EXISTS password TEXT;
+        ADD COLUMN IF NOT EXISTS password TEXT,
+        ADD COLUMN IF NOT EXISTS password_hash TEXT,
+        ADD COLUMN IF NOT EXISTS username TEXT,
+        ADD COLUMN IF NOT EXISTS is_guest BOOLEAN NOT NULL DEFAULT FALSE;
+      ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
+      CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users (LOWER(username))
+        WHERE username IS NOT NULL;
       CREATE TABLE IF NOT EXISTS sessions (
         id UUID PRIMARY KEY,
         user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -192,23 +201,99 @@ export async function ensureSchema() {
   }
 }
 
-export async function loginWithPassword(email, password) {
+function hashPassword(password) {
+  const salt = randomUUID().replaceAll("-", "");
+  return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
+}
+
+function verifyPassword(password, storedHash, legacyPassword) {
+  if (storedHash) {
+    const [salt, expected] = String(storedHash).split(":");
+    if (!salt || !expected) return false;
+    const actual = scryptSync(password, salt, 64);
+    const expectedBuffer = Buffer.from(expected, "hex");
+    return expectedBuffer.length === actual.length && timingSafeEqual(actual, expectedBuffer);
+  }
+  return Boolean(legacyPassword) && password === legacyPassword;
+}
+
+export async function loginWithPassword(identifier, password) {
   const result = await getPool().query(
     `
-      SELECT id, email, name, avatar_url, created_at, sticker_creations, role, password
+      SELECT id, email, username, name, avatar_url, created_at, sticker_creations, role,
+             password, password_hash, is_guest
       FROM users
-      WHERE LOWER(email) = LOWER($1)
+      WHERE LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($1)
       LIMIT 1
     `,
-    [String(email || "").trim()],
+    [String(identifier || "").trim()],
   );
   const row = result.rows[0];
-  if (!row || !row.password || row.password !== password) return null;
+  if (!row || row.is_guest || !verifyPassword(String(password || ""), row.password_hash, row.password)) {
+    return null;
+  }
+  if (!row.password_hash && row.password) {
+    await getPool().query(`UPDATE users SET password_hash = $2, password = NULL WHERE id = $1`, [
+      row.id,
+      hashPassword(String(password)),
+    ]);
+  }
   await getPool().query(
     `UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = $1`,
     [row.id],
   );
   return mapUser(row);
+}
+
+export async function registerUser({ username, name, password }) {
+  const normalizedUsername = String(username || "").trim();
+  const normalizedName = String(name || "").trim();
+  const normalizedPassword = String(password || "");
+  if (!/^[\p{L}\p{N}_.-]{3,30}$/u.test(normalizedUsername)) {
+    const error = new Error("Tên tài khoản dài 3-30 ký tự và chỉ gồm chữ, số, dấu chấm, gạch dưới hoặc gạch ngang.");
+    error.code = "INVALID_USERNAME";
+    throw error;
+  }
+  if (normalizedPassword.length < 6 || normalizedPassword.length > 128) {
+    const error = new Error("Mật khẩu phải dài từ 6 đến 128 ký tự.");
+    error.code = "INVALID_PASSWORD";
+    throw error;
+  }
+  if (!normalizedName || normalizedName.length > 80) {
+    const error = new Error("Vui lòng nhập tên hiển thị hợp lệ.");
+    error.code = "INVALID_NAME";
+    throw error;
+  }
+
+  const result = await getPool().query(
+    `
+      INSERT INTO users (username, name, password_hash, role, is_guest)
+      VALUES ($1, $2, $3, 'user', FALSE)
+      RETURNING id, email, username, name, avatar_url, created_at, sticker_creations, role, is_guest
+    `,
+    [normalizedUsername, normalizedName, hashPassword(normalizedPassword)],
+  ).catch((error) => {
+    if (error.code === "23505") {
+      const duplicate = new Error("Tên tài khoản đã được sử dụng.");
+      duplicate.code = "USERNAME_EXISTS";
+      throw duplicate;
+    }
+    throw error;
+  });
+  return mapUser(result.rows[0]);
+}
+
+export async function createGuestUser() {
+  const username = `guest_${randomUUID().slice(0, 8)}`;
+  const result = await getPool().query(
+    `
+      INSERT INTO users (username, name, role, is_guest)
+      VALUES ($1, 'Khách', 'user', TRUE)
+      RETURNING id, email, username, name, avatar_url, created_at, sticker_creations, role, is_guest
+    `,
+    [username],
+  );
+  return mapUser(result.rows[0]);
 }
 
 export async function upsertGoogleUser({ email, name, avatarUrl, isAdmin = false }) {
@@ -246,7 +331,8 @@ export async function getUserBySession(sessionId) {
   if (!sessionId || !UUID_PATTERN.test(sessionId)) return null;
   const result = await getPool().query(
     `
-      SELECT u.id, u.email, u.name, u.avatar_url, u.created_at, u.sticker_creations, u.role
+      SELECT u.id, u.email, u.username, u.name, u.avatar_url, u.created_at,
+             u.sticker_creations, u.role, u.is_guest
       FROM sessions s
       JOIN users u ON u.id = s.user_id
       WHERE s.id = $1 AND s.expires_at > NOW()
@@ -344,7 +430,7 @@ export async function deleteCard(id) {
 export async function listUsers() {
   const result = await getPool().query(
     `
-      SELECT id, email, name, avatar_url, created_at, sticker_creations, role
+      SELECT id, email, username, name, avatar_url, created_at, sticker_creations, role, is_guest
       FROM users
       ORDER BY created_at DESC
     `,
@@ -364,7 +450,7 @@ export async function updateUser(id, patch) {
       WHERE id = $1
       RETURNING id, email, name, avatar_url, created_at, sticker_creations, role
     `,
-    [id, String(patch.name || "").trim(), String(patch.email || "").trim(), role],
+    [id, String(patch.name || "").trim(), String(patch.email || "").trim() || null, role],
   );
   return result.rows[0] ? mapUser(result.rows[0]) : null;
 }

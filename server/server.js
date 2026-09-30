@@ -8,6 +8,8 @@ import { fileURLToPath } from "node:url";
 import {
   ensureSchema,
   loginWithPassword,
+  registerUser,
+  createGuestUser,
   upsertGoogleUser,
   createSession,
   getUserBySession,
@@ -409,8 +411,8 @@ createServer(async (req, res) => {
     if (req.method === "POST" && url.pathname === "/api/auth/login") {
       const body = await readBody(req);
       if (!body) return send(res, 400, { message: "Body JSON không hợp lệ." }, {}, req);
-      const user = await loginWithPassword(body.email, body.password);
-      if (!user) return send(res, 401, { message: "Email hoặc mật khẩu không đúng." }, {}, req);
+      const user = await loginWithPassword(body.identifier || body.email, body.password);
+      if (!user) return send(res, 401, { message: "Tài khoản hoặc mật khẩu không đúng." }, {}, req);
 
       const sessionId = await createSession(user.id);
       return send(
@@ -419,6 +421,41 @@ createServer(async (req, res) => {
         { user },
         { "Set-Cookie": sessionCookie(sessionId) },
         req
+      );
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/auth/register") {
+      const body = await readBody(req);
+      if (!body) return send(res, 400, { message: "Body JSON không hợp lệ." }, {}, req);
+      try {
+        const user = await registerUser(body);
+        const sessionId = await createSession(user.id);
+        return send(
+          res,
+          201,
+          { user },
+          { "Set-Cookie": sessionCookie(sessionId) },
+          req,
+        );
+      } catch (error) {
+        const status = ["INVALID_USERNAME", "INVALID_PASSWORD", "INVALID_NAME", "USERNAME_EXISTS"]
+          .includes(error.code)
+          ? error.code === "USERNAME_EXISTS" ? 409 : 400
+          : 500;
+        if (status === 500) throw error;
+        return send(res, status, { message: error.message }, {}, req);
+      }
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/auth/guest") {
+      const user = await createGuestUser();
+      const sessionId = await createSession(user.id);
+      return send(
+        res,
+        201,
+        { user },
+        { "Set-Cookie": sessionCookie(sessionId) },
+        req,
       );
     }
 
@@ -526,8 +563,8 @@ createServer(async (req, res) => {
 
       if (req.method === "PUT") {
         const body = await readBody(req);
-        if (!body || !String(body.name || "").trim() || !String(body.email || "").trim()) {
-          return send(res, 400, { message: "Tên và email không được để trống." }, {}, req);
+        if (!body || !String(body.name || "").trim()) {
+          return send(res, 400, { message: "Tên không được để trống." }, {}, req);
         }
         const updated = await updateUser(userId, body);
         if (!updated) return send(res, 404, { message: "Không tìm thấy user." }, {}, req);

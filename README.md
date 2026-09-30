@@ -23,7 +23,15 @@ Mở http://localhost:5173
 
 Vite proxy `/api` → Node `:3000`, nên React chỉ gọi `fetch("/api/...")`.
 
-### Tài khoản demo
+### Đăng nhập và tài khoản
+
+Người dùng có thể:
+
+- Đăng nhập bằng email cũ hoặc tên tài khoản và mật khẩu.
+- Đăng ký tài khoản mới bằng tên tài khoản (không bắt buộc là email).
+- Tiếp tục với tư cách khách. Tài khoản khách vẫn có thể chọn bộ, tải ảnh, tạo sticker và xem lịch sử trong phiên đó.
+
+Tài khoản demo:
 
 | Role | Email | Password |
 | --- | --- | --- |
@@ -64,7 +72,9 @@ Session lưu trong bảng `sessions` trên Supabase (cookie chỉ giữ UUID).
 
 | Method + path | Status | Ý nghĩa |
 | --- | --- | --- |
-| `POST /api/auth/login` | 200 / 401 | Tạo session cookie |
+| `POST /api/auth/login` | 200 / 401 | Đăng nhập bằng username/email và tạo session cookie |
+| `POST /api/auth/register` | 201 / 400 / 409 | Đăng ký username và mật khẩu, đồng thời tạo session |
+| `POST /api/auth/guest` | 201 | Tạo tài khoản khách và session để dùng đầy đủ tính năng sticker |
 | `POST /api/auth/logout` | 200 | Xoá session |
 | `GET /api/auth/me` | 200 / 401 | User hiện tại |
 | `GET /api/cards` | 200 | Danh sách bộ sticker |
