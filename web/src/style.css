@@ -163,7 +163,7 @@ img {
   gap: 12px;
 }
 
-/* ---------- Modal (login, tạo sticker, sửa card) ---------- */
+/* ---------- Modal ---------- */
 
 .backdrop {
   position: fixed;
@@ -176,7 +176,6 @@ img {
   background: rgba(16, 24, 20, 0.55);
 }
 
-.login-card,
 .create-card {
   position: relative;
   width: min(440px, 100%);
@@ -200,41 +199,6 @@ img {
 .modal-intro {
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.9rem;
-}
-
-.google-login-button {
-  width: 100%;
-  min-height: 48px;
-  margin-top: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 12px;
-  background: white;
-  color: #202124;
-  font-weight: 700;
-  text-decoration: none;
-  transition: background 0.2s, transform 0.2s;
-}
-
-.google-login-button:hover {
-  background: #f1f3f4;
-  transform: translateY(-1px);
-}
-
-.google-login-icon {
-  color: #4285f4;
-  font-size: 1.15rem;
-  font-weight: 800;
-}
-
-.modal-topic {
-  margin-top: 4px;
-  color: var(--accent);
-  font-size: 0.88rem;
-  font-weight: 700;
 }
 
 .visually-hidden {
@@ -286,13 +250,11 @@ img {
   overflow-y: auto;
 }
 
-.login-card h2,
 .create-card h2 {
   margin: 6px 0 10px;
   font-size: 1.5rem;
 }
 
-.login-card label,
 .create-card label {
   display: grid;
   gap: 7px;
@@ -306,7 +268,6 @@ img {
   font-weight: 400;
 }
 
-.login-card input,
 .create-card input,
 .create-card textarea,
 .create-card select {
@@ -319,7 +280,6 @@ img {
   resize: vertical;
 }
 
-.login-card input:focus,
 .create-card input:focus,
 .create-card textarea:focus,
 .create-card select:focus {
@@ -349,7 +309,6 @@ img {
   background: #151515;
 }
 
-.login-card .primary,
 .create-card .primary {
   width: 100%;
   margin: 22px 0 14px;
@@ -929,23 +888,6 @@ img {
   }
 }
 
-.card-topic {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 1;
-  margin: 0;
-  padding: 3px 7px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #000;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 
 .sticker-card h3 {
   margin: 8px 0 2px;

@@ -1,20 +1,15 @@
 import { randomUUID } from "node:crypto";
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const migrationsFolder = path.join(here, "migrations");
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-const TOPIC_COLORS = {
-  "Mùa Hè": "orange",
-  "Cảm Xúc": "pink",
-  "Học Tập & Công Việc": "blue",
-  "Học Tập": "blue",
-  "Tình Yêu": "pink",
-  "Ăn Uống": "orange",
-  "Du Lịch": "blue",
-  "Dễ Thương": "pink",
-};
 
 /** @type {Pool | undefined} */
 let pool;
@@ -34,7 +29,7 @@ function getPool() {
       idleTimeoutMillis: Number(process.env.DATABASE_IDLE_TIMEOUT_MS || 30000) || 30000,
       ssl: isLocal
         ? false
-        : { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED === "true" },
+        : { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== "false" },
     });
   }
   return pool;
@@ -53,19 +48,16 @@ function mapUser(row) {
 }
 
 function mapCard(row) {
-  const topic = row.topic || "";
   return {
     id: row.id,
     title: row.title,
     alias: row.alias,
     description: row.description,
     image: row.image,
-    topic,
     year: row.year,
     status: row.status,
     prompt: row.prompt || "",
     highlight: Boolean(row.highlight),
-    color: TOPIC_COLORS[topic] || "orange",
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
   };
@@ -88,90 +80,7 @@ function mapSticker(row) {
 export async function ensureSchema() {
   const client = await getPool().connect();
   try {
-    await client.query("BEGIN");
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id BIGSERIAL PRIMARY KEY,
-        email TEXT NOT NULL UNIQUE,
-        name TEXT NOT NULL,
-        avatar_url TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        last_login_at TIMESTAMPTZ
-      );
-      ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS avatar_url TEXT,
-        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ,
-        ADD COLUMN IF NOT EXISTS sticker_creations INTEGER NOT NULL DEFAULT 0,
-        ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user',
-        ADD COLUMN IF NOT EXISTS password TEXT;
-      CREATE TABLE IF NOT EXISTS sessions (
-        id UUID PRIMARY KEY,
-        user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        expires_at TIMESTAMPTZ NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
-      CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON sessions(user_id);
-      CREATE TABLE IF NOT EXISTS sticker_cards (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        alias TEXT NOT NULL,
-        description TEXT NOT NULL,
-        image TEXT NOT NULL,
-        topic TEXT NOT NULL DEFAULT '',
-        year TEXT NOT NULL,
-        status TEXT NOT NULL,
-        prompt TEXT NOT NULL DEFAULT '',
-        highlight BOOLEAN NOT NULL DEFAULT TRUE,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
-      ALTER TABLE sticker_cards
-        ADD COLUMN IF NOT EXISTS topic TEXT NOT NULL DEFAULT '',
-        ADD COLUMN IF NOT EXISTS prompt TEXT NOT NULL DEFAULT '',
-        ADD COLUMN IF NOT EXISTS highlight BOOLEAN NOT NULL DEFAULT TRUE;
-      CREATE TABLE IF NOT EXISTS generated_stickers (
-        id UUID PRIMARY KEY,
-        user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        card_id TEXT NOT NULL,
-        title TEXT NOT NULL,
-        image TEXT,
-        outfit TEXT NOT NULL DEFAULT '',
-        status TEXT NOT NULL DEFAULT 'processing',
-        error_message TEXT,
-        error_detail TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
-    `);
-
-    // Class demo accounts (email/password). Google users from Sticker-WEBAPP keep password NULL.
-    await client.query(
-      `
-      INSERT INTO users (email, name, role, password)
-      VALUES
-        ('admin@stickai.local', 'Admin StickAI', 'admin', 'admin123'),
-        ('demo@stickai.local', 'Minh Demo', 'user', 'demo123')
-      ON CONFLICT (email) DO UPDATE SET
-        password = COALESCE(users.password, EXCLUDED.password),
-        role = CASE
-          WHEN users.role = 'admin' THEN users.role
-          ELSE EXCLUDED.role
-        END,
-        updated_at = NOW()
-      `,
-    );
-
-    // Backfill topic if the column was added later on an existing Supabase table.
-    await client.query(`
-      UPDATE sticker_cards SET topic = 'Dễ Thương' WHERE id = 'everyday-expressions' AND (topic IS NULL OR topic = '');
-      UPDATE sticker_cards SET topic = 'Mùa Hè' WHERE id = 'summer-sticker-pack' AND (topic IS NULL OR topic = '');
-      UPDATE sticker_cards SET topic = 'Cảm Xúc' WHERE id = 'cute-emotions' AND (topic IS NULL OR topic = '');
-      UPDATE sticker_cards SET topic = 'Học Tập & Công Việc' WHERE id = 'work-study-vibes' AND (topic IS NULL OR topic = '');
-      UPDATE sticker_cards SET topic = 'Tình Yêu' WHERE id = 'love-notes' AND (topic IS NULL OR topic = '');
-      UPDATE sticker_cards SET topic = 'Ăn Uống' WHERE id = 'foodie-moments' AND (topic IS NULL OR topic = '');
-      UPDATE sticker_cards SET topic = 'Du Lịch' WHERE id = 'travel-adventures' AND (topic IS NULL OR topic = '');
-    `);
+    await runMigrations(client);
 
     const adminEmails = (process.env.ADMIN_EMAILS || "")
       .split(",")
@@ -182,33 +91,45 @@ export async function ensureSchema() {
         adminEmails,
       ]);
     }
-
-    await client.query("COMMIT");
-  } catch (error) {
-    await client.query("ROLLBACK").catch(() => undefined);
-    throw error;
   } finally {
     client.release();
   }
 }
 
-export async function loginWithPassword(email, password) {
-  const result = await getPool().query(
-    `
-      SELECT id, email, name, avatar_url, created_at, sticker_creations, role, password
-      FROM users
-      WHERE LOWER(email) = LOWER($1)
-      LIMIT 1
-    `,
-    [String(email || "").trim()],
-  );
-  const row = result.rows[0];
-  if (!row || !row.password || row.password !== password) return null;
-  await getPool().query(
-    `UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = $1`,
-    [row.id],
-  );
-  return mapUser(row);
+async function runMigrations(client) {
+  await client.query("BEGIN");
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        name TEXT PRIMARY KEY,
+        applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    const files = (await readdir(migrationsFolder))
+      .filter((file) => file.endsWith(".sql"))
+      .sort();
+
+    for (const name of files) {
+      const applied = await client.query(
+        "SELECT 1 FROM schema_migrations WHERE name = $1",
+        [name],
+      );
+      if (applied.rowCount) continue;
+
+      const sql = await readFile(path.join(migrationsFolder, name), "utf8");
+      await client.query(sql);
+      await client.query("INSERT INTO schema_migrations (name) VALUES ($1)", [name]);
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`Applied database migration: ${name}`);
+      }
+    }
+
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw error;
+  }
 }
 
 export async function upsertGoogleUser({ email, name, avatarUrl, isAdmin = false }) {
@@ -265,7 +186,7 @@ export async function deleteSession(sessionId) {
 export async function listCards() {
   const result = await getPool().query(
     `
-      SELECT id, title, alias, description, image, topic, year, status, prompt, highlight, created_at, updated_at
+      SELECT id, title, alias, description, image, year, status, prompt, highlight, created_at, updated_at
       FROM sticker_cards
       ORDER BY created_at ASC
     `,
@@ -276,7 +197,7 @@ export async function listCards() {
 export async function getCard(id) {
   const result = await getPool().query(
     `
-      SELECT id, title, alias, description, image, topic, year, status, prompt, highlight, created_at, updated_at
+      SELECT id, title, alias, description, image, year, status, prompt, highlight, created_at, updated_at
       FROM sticker_cards
       WHERE id = $1
       LIMIT 1
@@ -292,16 +213,15 @@ export async function updateCard(id, patch) {
   const result = await getPool().query(
     `
       UPDATE sticker_cards
-      SET title = $2, alias = $3, description = $4, topic = $5, image = $6, prompt = $7, updated_at = NOW()
+      SET title = $2, alias = $3, description = $4, image = $5, prompt = $6, updated_at = NOW()
       WHERE id = $1
-      RETURNING id, title, alias, description, image, topic, year, status, prompt, highlight, created_at, updated_at
+      RETURNING id, title, alias, description, image, year, status, prompt, highlight, created_at, updated_at
     `,
     [
       id,
       String(patch.title || current.title).trim(),
       String(patch.alias || current.alias).trim(),
       String(patch.description || current.description).trim(),
-      String(patch.topic || current.topic).trim(),
       String(patch.image || current.image).trim(),
       String(patch.prompt || current.prompt).trim(),
     ],
@@ -313,10 +233,10 @@ export async function createCard(patch) {
   const result = await getPool().query(
     `
       INSERT INTO sticker_cards
-        (id, title, alias, description, image, topic, year, status, prompt, highlight)
+        (id, title, alias, description, image, year, status, prompt, highlight)
       VALUES
-        ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)
-      RETURNING id, title, alias, description, image, topic, year, status, prompt, highlight, created_at, updated_at
+        ($1, $2, $3, $4, $5, $6, $7, $8, TRUE)
+      RETURNING id, title, alias, description, image, year, status, prompt, highlight, created_at, updated_at
     `,
     [
       String(patch.id).trim(),
@@ -324,7 +244,6 @@ export async function createCard(patch) {
       String(patch.alias).trim(),
       String(patch.description).trim(),
       String(patch.image || "/sticker-hero-illustrated.png").trim(),
-      String(patch.topic || "Dễ Thương").trim(),
       String(patch.year || new Date().getFullYear()).trim(),
       String(patch.status || "16 biểu cảm").trim(),
       String(patch.prompt || "").trim(),

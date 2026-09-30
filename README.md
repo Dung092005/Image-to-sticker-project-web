@@ -1,6 +1,6 @@
-# StickAI — bản dễ thuyết trình
+# StickAI
 
-StickAI tạo một bộ sticker từ ảnh người dùng. Bản này giữ sản phẩm gốc nhưng dùng đúng kiến thức lớp: **React + Vite + React Router**, **Node `http`**, REST API, **Supabase Postgres** (cùng schema với `Sticker-WEBAPP`), và script Python gọi Vertex AI.
+StickAI tạo bộ sticker từ ảnh người dùng bằng **React + Vite**, API **Node.js**, **Supabase Postgres** và script Python kết nối Vertex AI.
 
 ## Chạy project
 
@@ -23,12 +23,9 @@ Mở http://localhost:5173
 
 Vite proxy `/api` → Node `:3000`, nên React chỉ gọi `fetch("/api/...")`.
 
-### Tài khoản demo
+### Đăng nhập và quản trị
 
-| Role | Email | Password |
-| --- | --- | --- |
-| User | `demo@stickai.local` | `demo123` |
-| Admin | `admin@stickai.local` | `admin123` |
+Đăng nhập production dùng Google OAuth. Đặt email quản trị trong biến `ADMIN_EMAILS`.
 
 ## Kiến trúc
 
@@ -43,28 +40,43 @@ React (Vite :5173) --fetch /api--> Vite proxy --> Node server (:3000)
                                                Vertex AI / Gemini
 ```
 
-Cần `DATABASE_URL` trong `.env.local` (connection string pooler Supabase). Session lưu bảng `sessions`; user demo lớp vẫn login email/password.
+Cần `DATABASE_URL` trong `.env.local` (connection string pooler Supabase). Session lưu bảng `sessions`; người dùng được tạo khi đăng nhập Google lần đầu. Đặt email quản trị trong `ADMIN_EMAILS`.
 
 ### Frontend (`web/src`)
 
-- `main.jsx` — `BrowserRouter` (class 5)
-- `App.jsx` — `Routes` / `Route` / bảo vệ trang cần login
-- `pages/` — Landing, Collection, History, Admin (một file một trang)
+- `main.jsx` — `BrowserRouter`
+- `App.jsx` — routes và bảo vệ trang cần đăng nhập
+- `pages/` — Landing, Collection, History, Admin
 - `components/` — Header, DataTable
 - `api.js` — `fetch` + `credentials: "include"` để gửi session cookie
 
 ### Backend (`server/server.js`)
 
-Route ladder giống bài Pho Thin: **method + path**.  
-`send()` luôn đặt status + JSON + `res.end()` một lần.
+Các route REST được xử lý theo method và path. `send()` đặt status, JSON và kết thúc response.
 
 Session lưu trong bảng `sessions` trên Supabase (cookie chỉ giữ UUID).
+
+### Database migrations (`server/migrations`)
+
+Schema được chia thành các file SQL nhỏ và chạy theo thứ tự tên khi server khởi động lần đầu:
+
+1. `001_users.sql` — tài khoản và quyền người dùng
+2. `002_sessions.sql` — phiên đăng nhập
+3. `003_sticker_cards.sql` — danh mục bộ sticker
+4. `004_generated_stickers.sql` — các job/kết quả tạo sticker
+5. `005_remove_password_credentials.sql` — xóa các cột thông tin đăng nhập bằng mật khẩu khỏi `users`
+6. `006_remove_sticker_topic.sql` — xóa cột `topic` khỏi `sticker_cards`
+
+Migration 005 xóa dữ liệu xác thực mật khẩu; các tài khoản cần đăng nhập bằng Google. Database được chia sẻ với Sticker-WEBAPP, nên ứng dụng đó cũng sẽ mất đăng nhập bằng mật khẩu nếu còn sử dụng các cột này.
+
+Migration 006 xóa cột `topic` khỏi bảng dùng chung `sticker_cards`; các ứng dụng khác còn đọc cột này sẽ cần cập nhật.
+
+Server ghi nhận file đã chạy trong bảng `schema_migrations`, nên lần khởi động sau chỉ chạy migration mới. `ADMIN_EMAILS` đồng bộ quyền quản trị lúc server khởi động.
 
 ## API contract
 
 | Method + path | Status | Ý nghĩa |
 | --- | --- | --- |
-| `POST /api/auth/login` | 200 / 401 | Tạo session cookie |
 | `POST /api/auth/logout` | 200 | Xoá session |
 | `GET /api/auth/me` | 200 / 401 | User hiện tại |
 | `GET /api/cards` | 200 | Danh sách bộ sticker |
@@ -94,18 +106,3 @@ Cần Google Application Default Credentials (`gcloud auth application-default l
 
 Nếu thiếu env/credentials: History hiện `error` + message rõ, không treo im.
 
-## Nếu thầy hỏi
-
-**Session cookie?** Cookie chỉ giữ mã ngẫu nhiên; server map sang user. Frontend không tự phong admin.
-
-**Sao check lại trên server?** Browser có thể bị bỏ qua bằng curl. Server mới tin được.
-
-**Vite proxy?** `:5173` và `:3000` khác origin. Proxy cho phép gọi `/api` khi dev, tránh CORS.
-
-**Sao Postgres / Supabase?** Cùng DB với bản Sticker-WEBAPP để chia sẻ user + bộ sticker. Bản lớp vẫn giải thích được REST + session cookie.
-
-**Sao có Python?** SDK Vertex + prompt gốc nằm ở Python. Node = web API; Python = AI worker.
-
-**202 là gì?** Job đã nhận, ảnh chưa xong. History poll tới `completed` / `error`.
-
-**React Router?** Đổi URL không reload trang; `Link` / `NavLink` / `Routes` như class 5. Login/logout dùng reload nhẹ để đọc lại cookie cho chắc.

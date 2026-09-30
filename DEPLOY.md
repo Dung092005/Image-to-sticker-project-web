@@ -38,18 +38,24 @@ Repo hiện tại: `https://github.com/Dung092005/Image_to_sticker_project.git`
 | Key | Value |
 |---|---|
 | `DATABASE_URL` | Connection string Supabase (giống `.env.local`) |
+| `GOOGLE_CLIENT_ID` | Client ID của Google OAuth |
+| `GOOGLE_CLIENT_SECRET` | Client secret của Google OAuth |
+| `GOOGLE_REDIRECT_URI` | `https://<ten-service>.onrender.com/api/auth/google/callback` |
+| `ADMIN_EMAILS` | Email Google được cấp quyền admin, có thể để trống |
 | `GCP_PROJECT_ID` | Project GCP của bạn |
 | `GCP_LOCATION` | `us-central1` |
 | `GEMINI_IMAGE_MODEL` | `gemini-2.5-flash-image` |
 | `GOOGLE_APPLICATION_CREDENTIALS_JSON` | **Toàn bộ nội dung** file service account `.json` (1 dòng JSON) |
-| `APP_ORIGIN` | Tạm `http://localhost:5173` — sau khi có Vercel sẽ sửa |
+| `APP_ORIGIN` | Origin frontend production, ví dụ `https://stickai.vercel.app` |
 | `COOKIE_SECURE` | `true` |
 | `COOKIE_SAMESITE` | `Lax` |
 | `NODE_ENV` | `production` |
-| `DATABASE_SSL_REJECT_UNAUTHORIZED` | `false` |
+| `DATABASE_SSL_REJECT_UNAUTHORIZED` | `true` (hoặc bỏ trống để xác minh chứng chỉ TLS) |
 
 5. Deploy → chờ build xong
 6. Mở `https://<ten-service>.onrender.com/api/health` → phải thấy `{"ok":true,...}`
+
+Thêm chính xác giá trị `GOOGLE_REDIRECT_URI` ở trên vào Authorized redirect URIs của OAuth client trong Google Cloud Console.
 
 Copy URL Render, ví dụ: `https://stickai-api.onrender.com`
 
@@ -99,7 +105,7 @@ Sau khi có URL Vercel (ví dụ `https://stickai-xxx.vercel.app`):
 ## E. Kiểm tra
 
 1. Mở site Vercel
-2. Login: `demo@stickai.local` / `demo123`
+2. Login bằng tài khoản Google đã cấu hình OAuth
 3. Xem danh mục stickers (đọc từ Supabase)
 4. (Tuỳ) thử generate nếu đã cấu hình GCP đúng
 

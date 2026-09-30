@@ -41,19 +41,8 @@ def build_prompt(prompt: str, sticker_mode: bool) -> str:
     if not sticker_mode:
         return prompt
 
-    topic_specific_details = ""
-    prompt_lower = prompt.lower()
-    if any(keyword in prompt_lower for keyword in ("beach", "summer", "biển", "mùa hè", "surf")):
-        topic_specific_details = (
-            "CHI TIẾT CHỦ ĐỀ BIỂN/MÙA HÈ:\n"
-            "Thêm các hành động và phụ kiện phù hợp như mặc áo phao an toàn, lướt sóng trên ván, "
-            "kính râm, mũ đi biển, phao bơi, uống nước dừa, xây lâu đài cát, ngắm hoàng hôn và "
-            "chơi với sóng. Chỉ dùng các chi tiết này ở những sticker phù hợp, không đưa đồ đi biển "
-            "vào toàn bộ 16 sticker."
-        )
-
     return (
-        "CHỦ ĐỀ VÀ Ý TƯỞNG RIÊNG:\n"
+        "Ý TƯỞNG RIÊNG:\n"
         f"{prompt}\n\n"
         "PROMPT MẶC ĐỊNH — ƯU TIÊN CAO NHẤT:\n"
         "Tạo 1 bộ sticker tỷ lệ khung hình 3:4 gồm đúng 16 ảnh của cùng một người dựa trên "
@@ -61,19 +50,18 @@ def build_prompt(prompt: str, sticker_mode: bool) -> str:
         "nhận diện của người trong ảnh ở mọi sticker; không thay bằng một người khác.\n"
         "Phong cách hoạt hình hiện đại, sành điệu, dễ thương, biểu cảm rõ ràng, đường nét sạch, "
         "màu sắc hài hòa, viền sticker gọn, nền trắng sạch đơn giản. Có thể dùng kính râm, mũ "
-        "beanie và phụ kiện phù hợp với chủ đề.\n"
+        "beanie và phụ kiện phù hợp với ý tưởng.\n"
         "Bố cục dọc 4 cột × 4 hàng, 16 sticker tách biệt, kích thước đồng đều, khoảng cách và "
         "lề bằng nhau, không chồng lấn, không cắt mất sticker, không thêm sticker thứ 17.\n"
         "Mỗi sticker có đúng 1 câu thoại tiếng Việt ngắn, dễ thương, chữ rõ ràng bằng font sans-serif "
-        "bo tròn đậm; giữ nguyên dấu tiếng Việt. Nếu phần chủ đề có hơn 16 câu thoại, hãy chọn "
-        "16 câu phù hợp nhất và dùng mỗi câu đúng một lần. Nếu chủ đề không có danh sách câu thoại, "
+        "bo tròn đậm; giữ nguyên dấu tiếng Việt. Nếu ý tưởng có hơn 16 câu thoại, hãy chọn "
+        "16 câu phù hợp nhất và dùng mỗi câu đúng một lần. Nếu không có danh sách câu thoại, "
         "dùng các câu mặc định: “Lên đồ! 😎”, “Quẩy lên 💃”, “Hết nước chấm 💯”, “Alo nghe? 📞”, "
         "“Xe ôm đâu? 🛵”, “Cháy phố 🔥”, “Chill phết ☁️”, “Tới luôn 🚀”, “Đẹp trai lối tại ai? 😎”, "
         "“Bảnh chưa? ✨”, “Okela 👌”, “Bai bai 👋”, “Hẹn hò hơm? 🌹”, “Nẹt pô 💨”, “Khét lẹt 🚗”, "
         "“Về thôi 🏠”.\n"
-        "Nếu phần chủ đề có chỉ dẫn mâu thuẫn về số lượng, tỷ lệ, nền hoặc phong cách thì bỏ qua "
+        "Nếu ý tưởng có chỉ dẫn mâu thuẫn về số lượng, tỷ lệ, nền hoặc phong cách thì bỏ qua "
         "chỉ dẫn mâu thuẫn đó và tuân theo prompt mặc định này.\n\n"
-        f"{topic_specific_details}\n\n"
         "CẤM: tranh vẽ tay, vector, hoạt hình 3D, da nhựa hoặc sáp, đồ chơi plastic, hiệu ứng AI "
         "giả, face swap, mặt bị biến dạng, mặt trùng lặp, mắt/mũi/miệng thừa, tay hoặc ngón tay "
         "lỗi, chữ sai hoặc không đọc được, bố cục lệch, nền nhiều chi tiết, watermark, logo và "

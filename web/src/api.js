@@ -32,8 +32,6 @@ export { apiUrl };
 
 const LEGACY_CARD_IMAGES = {
   "/sticker-hero-illustrated.png": "/hero-slide.png",
-  "/app-beach-banner-desktop.png": "/hero.png",
-  "/stickai-demo-visual.png": "/hero-slide.png",
 };
 
 export function resolveCardImage(image) {
