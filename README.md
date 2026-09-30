@@ -64,6 +64,9 @@ Schema được chia thành các file SQL nhỏ và chạy theo thứ tự tên 
 2. `002_sessions.sql` — phiên đăng nhập
 3. `003_sticker_cards.sql` — danh mục bộ sticker
 4. `004_generated_stickers.sql` — các job/kết quả tạo sticker
+5. `005_remove_password_credentials.sql` — xóa các cột thông tin đăng nhập bằng mật khẩu khỏi `users`
+
+Migration 005 xóa dữ liệu xác thực mật khẩu; các tài khoản cần đăng nhập bằng Google. Database được chia sẻ với Sticker-WEBAPP, nên ứng dụng đó cũng sẽ mất đăng nhập bằng mật khẩu nếu còn sử dụng các cột này.
 
 Server ghi nhận file đã chạy trong bảng `schema_migrations`, nên lần khởi động sau chỉ chạy migration mới. `ADMIN_EMAILS` đồng bộ quyền quản trị lúc server khởi động.
 
