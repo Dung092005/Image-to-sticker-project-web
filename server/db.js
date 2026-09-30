@@ -29,7 +29,11 @@ function getPool() {
       idleTimeoutMillis: Number(process.env.DATABASE_IDLE_TIMEOUT_MS || 30000) || 30000,
       ssl: isLocal
         ? false
-        : { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== "false" },
+        : {
+            // Supabase pooler often uses a cert chain Node rejects by default.
+            // Set DATABASE_SSL_REJECT_UNAUTHORIZED=true only if you install a proper CA.
+            rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED === "true",
+          },
     });
   }
   return pool;
