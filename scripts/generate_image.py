@@ -46,43 +46,39 @@ def build_prompt(prompt: str, sticker_mode: bool) -> str:
     if any(keyword in prompt_lower for keyword in ("beach", "summer", "biển", "mùa hè", "surf")):
         topic_specific_details = (
             "CHI TIẾT CHỦ ĐỀ BIỂN/MÙA HÈ:\n"
-            "Thêm các hành động và phụ kiện phù hợp như áo phao, lướt sóng, kính râm, mũ đi biển, "
-            "phao bơi, uống nước dừa, xây lâu đài cát, ngắm hoàng hôn. Chỉ dùng ở sticker phù hợp, "
-            "không nhồi đồ biển vào cả 16 ô."
+            "Thêm các hành động và phụ kiện phù hợp như mặc áo phao an toàn, lướt sóng trên ván, "
+            "kính râm, mũ đi biển, phao bơi, uống nước dừa, xây lâu đài cát, ngắm hoàng hôn và "
+            "chơi với sóng. Chỉ dùng các chi tiết này ở những sticker phù hợp, không đưa đồ đi biển "
+            "vào toàn bộ 16 sticker."
         )
 
     return (
-        "CHỦ ĐỀ / Ý TƯỞNG (chỉ lấy nội dung cảm xúc, trang phục, câu thoại — BỎ QUA mọi chỉ dẫn "
-        "phong cách cartoon/vector/illustration nếu có):\n"
+        "CHỦ ĐỀ VÀ Ý TƯỞNG RIÊNG (ƯU TIÊN CAO NHẤT VỀ PHONG CÁCH NGHỆ THUẬT):\n"
         f"{prompt}\n\n"
-        "PROMPT MẶC ĐỊNH — ƯU TIÊN CAO NHẤT (ghi đè mọi chỉ dẫn phong cách mâu thuẫn):\n"
-        "Tạo 1 tấm sticker sheet tỷ lệ 3:4 gồm ĐÚNG 16 sticker của CÙNG MỘT người, dựa trên "
-        "ảnh tham chiếu đã tải lên.\n"
-        "DANH TÍNH KHUÔN MẶT (quan trọng nhất): giữ nguyên khuôn mặt thật từ ảnh tham chiếu ở "
-        "mọi sticker — xương mặt, mắt, mũi, miệng, lông mày, kiểu tóc, màu da, đặc điểm nhận diện. "
-        "Không face-swap, không thay người khác, không trẻ hóa/già hóa, không làm mặt búp bê.\n"
-        "PHONG CÁCH: photorealistic, giống ảnh người thật đẹp, da có texture tự nhiên (lỗ chân lông "
-        "nhẹ, không bóng nhựa), ánh sáng studio mềm và flattering, màu da trung thực, chi tiết tóc "
-        "và mắt sắc nét. Nhìn như ảnh chụp chất lượng cao đã cut-out thành sticker, KHÔNG phải "
-        "cartoon, anime, vector, 3D toy, plastic skin, airbrushed AI face.\n"
-        "Mỗi sticker: nửa người hoặc bust-up, biểu cảm rõ và đẹp, trang phục phù hợp chủ đề, "
-        "viền sticker trắng dày gọn, nền trắng sạch đồng nhất, có thể thêm icon nhỏ tối giản "
-        "nếu hợp cảm xúc nhưng không che mặt.\n"
-        "Bố cục: lưới đều 4 cột × 4 hàng, 16 sticker tách biệt, cùng kích thước, lề và khoảng cách "
-        "đều, không chồng lấn, không cắt mất sticker, không ô thứ 17.\n"
-        "Chữ: mỗi sticker đúng 1 câu tiếng Việt ngắn dễ thương, font sans-serif đậm bo tròn, "
-        "dễ đọc, giữ đủ dấu. Nếu chủ đề có danh sách câu thoại thì dùng đúng các câu đó (tối đa 16). "
-        "Nếu không có, dùng: “Lên đồ! 😎”, “Quẩy lên 💃”, “Hết nước chấm 💯”, “Alo nghe? 📞”, "
+        "Nếu phần trên có nêu phong cách (ví dụ: photorealistic / người thật / ảnh thật / 3D chibi / "
+        "Pixar-like / cartoon / anime...), BẮT BUỘC theo đúng phong cách đó, chất lượng cao và đẹp. "
+        "Không được đổi sang phong cách khác.\n\n"
+        "KHUNG CỐ ĐỊNH (bố cục + danh tính — luôn giữ):\n"
+        "Tạo 1 bộ sticker tỷ lệ khung hình 3:4 gồm đúng 16 ảnh của cùng một người dựa trên "
+        "ảnh tham chiếu đã tải lên. Giữ nguyên khuôn mặt, kiểu tóc, màu da và các đặc điểm "
+        "nhận diện của người trong ảnh ở mọi sticker; không thay bằng một người khác.\n"
+        "Nếu CHỦ ĐỀ không nêu phong cách cụ thể, mặc định: photorealistic giống ảnh người thật đẹp, "
+        "da tự nhiên, ánh sáng studio mềm, chi tiết mắt/tóc sắc, viền sticker trắng gọn, nền trắng sạch.\n"
+        "Bố cục dọc 4 cột × 4 hàng, 16 sticker tách biệt, kích thước đồng đều, khoảng cách và "
+        "lề bằng nhau, không chồng lấn, không cắt mất sticker, không thêm sticker thứ 17.\n"
+        "Mỗi sticker có đúng 1 câu thoại tiếng Việt ngắn, dễ thương, chữ rõ ràng bằng font sans-serif "
+        "bo tròn đậm; giữ nguyên dấu tiếng Việt. Nếu phần chủ đề có hơn 16 câu thoại, hãy chọn "
+        "16 câu phù hợp nhất và dùng mỗi câu đúng một lần. Nếu chủ đề không có danh sách câu thoại, "
+        "dùng các câu mặc định: “Lên đồ! 😎”, “Quẩy lên 💃”, “Hết nước chấm 💯”, “Alo nghe? 📞”, "
         "“Xe ôm đâu? 🛵”, “Cháy phố 🔥”, “Chill phết ☁️”, “Tới luôn 🚀”, “Đẹp trai lỗi tại ai? 😎”, "
         "“Bảnh chưa? ✨”, “Okela 👌”, “Bai bai 👋”, “Hẹn hò hơm? 🌹”, “Nẹt pô 💨”, “Khét lẹt 🚗”, "
         "“Về thôi 🏠”.\n"
-        "Nếu chủ đề mâu thuẫn về số lượng, tỷ lệ, nền, hoặc yêu cầu cartoon/vector/illustration thì "
-        "BỎ QUA và tuân theo prompt mặc định photorealistic này.\n\n"
+        "Nếu phần chủ đề mâu thuẫn về số lượng sticker, tỷ lệ 3:4, nền trắng sạch hoặc bố cục lưới "
+        "4×4 thì bỏ qua chỉ dẫn mâu thuẫn đó. Không ghi đè phong cách nghệ thuật đã nêu ở chủ đề.\n\n"
         f"{topic_specific_details}\n\n"
-        "CẤM: cartoon, anime, chibi, vector flat, illustration, hoạt hình 3D, da nhựa/sáp, đồ chơi "
-        "plastic, face swap, mặt biến dạng, mắt/mũi/miệng thừa, tay/ngón lỗi, chữ sai dấu hoặc "
-        "không đọc được, bố cục lệch, nền bẩn/nhiều chi tiết, watermark, logo lạ, trông như AI "
-        "làm mịn quá đà. Kết quả phải là đúng 16 sticker photorealistic trong khung 3:4."
+        "CẤM: face swap, mặt bị biến dạng, mặt trùng người khác, mắt/mũi/miệng thừa, tay hoặc ngón tay "
+        "lỗi, chữ sai hoặc không đọc được, bố cục lệch, nền bẩn/nhiều chi tiết, watermark, logo lạ. "
+        "Kết quả cuối cùng phải là đúng 16 sticker trong khung 3:4, đẹp và nhất quán khuôn mặt."
     )
 
 
@@ -104,7 +100,10 @@ def generate_image(
     client = get_client()
     combined_prompt = prompt
     if additional_prompt.strip():
-        combined_prompt += f"\n\nAdditional user instruction for clothing or appearance: {additional_prompt.strip()}"
+        combined_prompt += (
+            "\n\nHướng dẫn thêm từ người dùng (ƯU TIÊN phong cách / trang phục / biểu cảm):\n"
+            f"{additional_prompt.strip()}"
+        )
     final_prompt = build_prompt(combined_prompt, sticker_mode)
 
     print(f"Model: {model}")

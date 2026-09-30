@@ -474,7 +474,8 @@ createServer(async (req, res) => {
         outfit && `Trang phục: ${outfit}`,
         String(body.fields.accessories || "").trim() && `Phụ kiện: ${String(body.fields.accessories).trim()}`,
         String(body.fields.expression || "").trim() && `Biểu cảm/vibe: ${String(body.fields.expression).trim()}`,
-        String(body.fields.customPrompt || "").trim() && `Ý tưởng thêm: ${String(body.fields.customPrompt).trim()}`,
+        String(body.fields.customPrompt || "").trim() &&
+          `Phong cách / ý tưởng thêm (ưu tiên): ${String(body.fields.customPrompt).trim()}`,
       ].filter(Boolean).join("\n");
       if (additionalPrompt.length > 800) {
         return send(res, 400, { message: "Các tùy chọn bổ sung tối đa 800 ký tự." }, {}, req);

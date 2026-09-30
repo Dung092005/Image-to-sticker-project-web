@@ -287,7 +287,9 @@ export default function Collection({ user }) {
             </button>
             <p className="eyebrow">Tạo bộ sticker</p>
             <h2>{selectedCard.title}</h2>
-            <p className="modal-intro">Prompt tuỳ chọn bên dưới dùng để bổ sung yêu cầu cho bộ sticker.</p>
+            <p className="modal-intro">
+              Prompt tuỳ chọn để chọn phong cách: ví dụ “photorealistic người thật” hoặc “3D chibi cute”.
+            </p>
 
             <label className="upload-field">
               Ảnh tham chiếu
@@ -310,7 +312,7 @@ export default function Collection({ user }) {
                 rows={4}
                 maxLength={400}
                 value={customPrompt}
-                placeholder="Ví dụ: thêm tư thế giơ tay chào, giữ nguyên kiểu tóc, dùng màu sắc tươi sáng..."
+                placeholder="Ví dụ: phong cách photorealistic giống ảnh người thật đẹp / 3D chibi Pixar cute / giữ nguyên kính và kiểu tóc..."
                 onChange={(event) => setCustomPrompt(event.target.value)}
               />
             </label>
