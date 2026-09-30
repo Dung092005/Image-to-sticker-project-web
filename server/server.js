@@ -313,7 +313,7 @@ writeGcpCredentialsFromEnv();
 await ensureSchema();
 await pingDatabase();
 
-const port = Number(process.env.PORT || 3000);
+const port = Number(process.env.PORT || 3001);
 
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
@@ -381,7 +381,7 @@ createServer(async (req, res) => {
         return fail("google_not_configured");
       }
       if (!cookiesFromRequest.stickai_oauth_state ||
-          cookiesFromRequest.stickai_oauth_state !== url.searchParams.get("state")) {
+        cookiesFromRequest.stickai_oauth_state !== url.searchParams.get("state")) {
         return fail("state_mismatch");
       }
 
@@ -475,7 +475,7 @@ createServer(async (req, res) => {
         String(body.fields.accessories || "").trim() && `Phụ kiện: ${String(body.fields.accessories).trim()}`,
         String(body.fields.expression || "").trim() && `Biểu cảm/vibe: ${String(body.fields.expression).trim()}`,
         String(body.fields.customPrompt || "").trim() &&
-          `Phong cách / ý tưởng thêm (ưu tiên): ${String(body.fields.customPrompt).trim()}`,
+        `Phong cách / ý tưởng thêm (ưu tiên): ${String(body.fields.customPrompt).trim()}`,
       ].filter(Boolean).join("\n");
       if (additionalPrompt.length > 800) {
         return send(res, 400, { message: "Các tùy chọn bổ sung tối đa 800 ký tự." }, {}, req);
