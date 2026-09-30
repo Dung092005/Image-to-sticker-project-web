@@ -11,17 +11,6 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-const TOPIC_COLORS = {
-  "Mùa Hè": "orange",
-  "Cảm Xúc": "pink",
-  "Học Tập & Công Việc": "blue",
-  "Học Tập": "blue",
-  "Tình Yêu": "pink",
-  "Ăn Uống": "orange",
-  "Du Lịch": "blue",
-  "Dễ Thương": "pink",
-};
-
 /** @type {Pool | undefined} */
 let pool;
 
@@ -65,12 +54,10 @@ function mapCard(row) {
     alias: row.alias,
     description: row.description,
     image: row.image,
-    topic: row.topic,
     year: row.year,
     status: row.status,
     prompt: row.prompt || "",
     highlight: Boolean(row.highlight),
-    color: TOPIC_COLORS[row.topic] || "orange",
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
   };
@@ -199,7 +186,7 @@ export async function deleteSession(sessionId) {
 export async function listCards() {
   const result = await getPool().query(
     `
-      SELECT id, title, alias, description, image, topic, year, status, prompt, highlight, created_at, updated_at
+      SELECT id, title, alias, description, image, year, status, prompt, highlight, created_at, updated_at
       FROM sticker_cards
       ORDER BY created_at ASC
     `,
@@ -210,7 +197,7 @@ export async function listCards() {
 export async function getCard(id) {
   const result = await getPool().query(
     `
-      SELECT id, title, alias, description, image, topic, year, status, prompt, highlight, created_at, updated_at
+      SELECT id, title, alias, description, image, year, status, prompt, highlight, created_at, updated_at
       FROM sticker_cards
       WHERE id = $1
       LIMIT 1
@@ -226,16 +213,15 @@ export async function updateCard(id, patch) {
   const result = await getPool().query(
     `
       UPDATE sticker_cards
-      SET title = $2, alias = $3, description = $4, topic = $5, image = $6, prompt = $7, updated_at = NOW()
+      SET title = $2, alias = $3, description = $4, image = $5, prompt = $6, updated_at = NOW()
       WHERE id = $1
-      RETURNING id, title, alias, description, image, topic, year, status, prompt, highlight, created_at, updated_at
+      RETURNING id, title, alias, description, image, year, status, prompt, highlight, created_at, updated_at
     `,
     [
       id,
       String(patch.title || current.title).trim(),
       String(patch.alias || current.alias).trim(),
       String(patch.description || current.description).trim(),
-      String(patch.topic || current.topic).trim(),
       String(patch.image || current.image).trim(),
       String(patch.prompt || current.prompt).trim(),
     ],
@@ -250,7 +236,7 @@ export async function createCard(patch) {
         (id, title, alias, description, image, topic, year, status, prompt, highlight)
       VALUES
         ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)
-      RETURNING id, title, alias, description, image, topic, year, status, prompt, highlight, created_at, updated_at
+      RETURNING id, title, alias, description, image, year, status, prompt, highlight, created_at, updated_at
     `,
     [
       String(patch.id).trim(),
@@ -258,7 +244,7 @@ export async function createCard(patch) {
       String(patch.alias).trim(),
       String(patch.description).trim(),
       String(patch.image || "/sticker-hero-illustrated.png").trim(),
-      String(patch.topic || "Dễ Thương").trim(),
+      "", // Keep the required column in the shared Sticker-WEBAPP schema empty.
       String(patch.year || new Date().getFullYear()).trim(),
       String(patch.status || "16 biểu cảm").trim(),
       String(patch.prompt || "").trim(),

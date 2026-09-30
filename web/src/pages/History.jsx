@@ -86,7 +86,7 @@ export default function History({ user }) {
 function HistoryCard({ sticker, card, onOpen }) {
   return (
     <article
-      className={`sticker-card ${card?.color || "pink"}`}
+      className="sticker-card"
       role="button"
       tabIndex={0}
       onClick={onOpen}
@@ -100,7 +100,6 @@ function HistoryCard({ sticker, card, onOpen }) {
     >
       <div className="card-art">
         {sticker.image && <img src={sticker.image} alt={card?.title || sticker.title} />}
-        <p className="card-topic">{card?.topic || "Bộ sticker"}</p>
         <div className="card-info">
           <h3>{card?.title || sticker.title}</h3>
           <p className="card-alias">{card?.alias || "Sticker của bạn"}</p>
@@ -140,7 +139,7 @@ function StickerPreviewModal({ sticker, card, onClose }) {
         <button className="close" type="button" onClick={onClose} aria-label="Đóng">
           ×
         </button>
-        <p className="eyebrow">{card?.topic || "Sticker"}</p>
+        <p className="eyebrow">Kết quả sticker</p>
         <h2>{card?.title || sticker.title}</h2>
         {hasImage ? (
           <img className="sticker-preview-image" src={sticker.image} alt={sticker.title} />

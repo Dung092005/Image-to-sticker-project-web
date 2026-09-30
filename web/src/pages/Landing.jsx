@@ -8,7 +8,7 @@ export default function Landing() {
           <p className="eyebrow">Stickers riêng của bạn</p>
           <h1>Một tấm ảnh, cả bộ sticker.</h1>
           <p className="hero-lead">
-            Chọn một chủ đề, tải ảnh lên và biến cá tính của bạn thành bộ sticker
+            Tải ảnh lên và biến cá tính của bạn thành bộ sticker
             để dùng trong mọi cuộc trò chuyện.
           </p>
           <div className="cta-row">

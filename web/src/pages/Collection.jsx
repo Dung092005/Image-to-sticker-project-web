@@ -242,7 +242,7 @@ export default function Collection({ user }) {
           <div className="card-grid">
             {cards.map((card) => (
               <article
-                className={`sticker-card ${card.color}`}
+                className="sticker-card"
                 key={card.id}
                 role="button"
                 tabIndex={0}
@@ -262,7 +262,6 @@ export default function Collection({ user }) {
                       alt={card.title}
                     />
                   )}
-                  <p className="card-topic">{card.topic}</p>
                   <div className="card-info">
                     <h3>{card.title}</h3>
                     <p className="card-alias">{card.alias}</p>
@@ -284,8 +283,7 @@ export default function Collection({ user }) {
             </button>
             <p className="eyebrow">Tạo bộ sticker</p>
             <h2>{selectedCard.title}</h2>
-            <p className="modal-topic">Chủ đề: {selectedCard.topic}</p>
-            <p className="modal-intro">Card này sẽ quyết định chủ đề chính của bộ sticker. Prompt bên dưới chỉ dùng để bổ sung yêu cầu.</p>
+            <p className="modal-intro">Prompt tuỳ chọn bên dưới dùng để bổ sung yêu cầu cho bộ sticker.</p>
 
             <label className="upload-field">
               Ảnh tham chiếu

@@ -199,7 +199,6 @@ export function AdminStickers({ user }) {
           title: editing.title,
           alias: editing.alias,
           description: editing.description,
-          topic: editing.topic,
           image: editing.image,
           prompt: editing.prompt,
         }),
@@ -258,7 +257,6 @@ export function AdminStickers({ user }) {
               id: "",
               title: "",
               alias: "",
-              topic: "Dễ Thương",
               image: "/sticker-hero-illustrated.png",
               description: "",
               prompt: "",
@@ -272,7 +270,7 @@ export function AdminStickers({ user }) {
       <AdminState data={data} error={error}>
         {(body) => (
           <DataTable
-            headers={["Ảnh", "Tên", "Chủ đề", "Alias", "Mô tả"]}
+            headers={["Ảnh", "Tên", "Alias", "Mô tả"]}
             actions={(row) => (
               <div className="table-action-group">
                 <button
@@ -300,7 +298,6 @@ export function AdminStickers({ user }) {
               cells: [
                 <img className="table-image-preview" src={resolveCardImage(card.image)} alt={card.title} />,
                 card.title,
-                card.topic,
                 card.alias,
                 card.description,
               ],
@@ -333,14 +330,6 @@ export function AdminStickers({ user }) {
               <input
                 value={editing.title}
                 onChange={(event) => setEditing({ ...editing, title: event.target.value })}
-                required
-              />
-            </label>
-            <label>
-              Chủ đề
-              <input
-                value={editing.topic || ""}
-                onChange={(event) => setEditing({ ...editing, topic: event.target.value })}
                 required
               />
             </label>

@@ -201,13 +201,6 @@ img {
   font-size: 0.9rem;
 }
 
-.modal-topic {
-  margin-top: 4px;
-  color: var(--accent);
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -895,23 +888,6 @@ img {
   }
 }
 
-.card-topic {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 1;
-  margin: 0;
-  padding: 3px 7px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #000;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 
 .sticker-card h3 {
   margin: 8px 0 2px;
