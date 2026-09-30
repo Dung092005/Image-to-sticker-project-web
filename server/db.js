@@ -53,18 +53,19 @@ function mapUser(row) {
 }
 
 function mapCard(row) {
+  const topic = row.topic || "";
   return {
     id: row.id,
     title: row.title,
     alias: row.alias,
     description: row.description,
     image: row.image,
-    topic: row.topic,
+    topic,
     year: row.year,
     status: row.status,
     prompt: row.prompt || "",
     highlight: Boolean(row.highlight),
-    color: TOPIC_COLORS[row.topic] || "orange",
+    color: TOPIC_COLORS[topic] || "orange",
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
   };
@@ -118,7 +119,7 @@ export async function ensureSchema() {
         alias TEXT NOT NULL,
         description TEXT NOT NULL,
         image TEXT NOT NULL,
-        topic TEXT NOT NULL,
+        topic TEXT NOT NULL DEFAULT '',
         year TEXT NOT NULL,
         status TEXT NOT NULL,
         prompt TEXT NOT NULL DEFAULT '',
@@ -126,6 +127,10 @@ export async function ensureSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+      ALTER TABLE sticker_cards
+        ADD COLUMN IF NOT EXISTS topic TEXT NOT NULL DEFAULT '',
+        ADD COLUMN IF NOT EXISTS prompt TEXT NOT NULL DEFAULT '',
+        ADD COLUMN IF NOT EXISTS highlight BOOLEAN NOT NULL DEFAULT TRUE;
       CREATE TABLE IF NOT EXISTS generated_stickers (
         id UUID PRIMARY KEY,
         user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -156,6 +161,17 @@ export async function ensureSchema() {
         updated_at = NOW()
       `,
     );
+
+    // Backfill topic if the column was added later on an existing Supabase table.
+    await client.query(`
+      UPDATE sticker_cards SET topic = 'Dễ Thương' WHERE id = 'everyday-expressions' AND (topic IS NULL OR topic = '');
+      UPDATE sticker_cards SET topic = 'Mùa Hè' WHERE id = 'summer-sticker-pack' AND (topic IS NULL OR topic = '');
+      UPDATE sticker_cards SET topic = 'Cảm Xúc' WHERE id = 'cute-emotions' AND (topic IS NULL OR topic = '');
+      UPDATE sticker_cards SET topic = 'Học Tập & Công Việc' WHERE id = 'work-study-vibes' AND (topic IS NULL OR topic = '');
+      UPDATE sticker_cards SET topic = 'Tình Yêu' WHERE id = 'love-notes' AND (topic IS NULL OR topic = '');
+      UPDATE sticker_cards SET topic = 'Ăn Uống' WHERE id = 'foodie-moments' AND (topic IS NULL OR topic = '');
+      UPDATE sticker_cards SET topic = 'Du Lịch' WHERE id = 'travel-adventures' AND (topic IS NULL OR topic = '');
+    `);
 
     const adminEmails = (process.env.ADMIN_EMAILS || "")
       .split(",")
