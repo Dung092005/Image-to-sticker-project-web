@@ -5,7 +5,6 @@ import { api } from "../api.js";
 export default function Header({ user, transparent = false }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
 
   useEffect(() => {
@@ -27,9 +26,8 @@ export default function Header({ user, transparent = false }) {
 
   return (
     <header
-      className={`app-header ${transparent ? "transparent" : ""} ${
-        transparent && !hasScrolled ? "at-top" : ""
-      }`}
+      className={`app-header ${transparent ? "transparent" : ""} ${transparent && !hasScrolled ? "at-top" : ""
+        }`}
     >
       <div className="mobile-header-controls">
         <button
@@ -46,28 +44,7 @@ export default function Header({ user, transparent = false }) {
         <Link className="logo mobile-logo" to="/app">
           Stick<span>AI</span>
         </Link>
-        <button
-          className="mobile-icon-button"
-          type="button"
-          aria-label="Tìm kiếm"
-          aria-expanded={showSearch}
-          onClick={() => setShowSearch((visible) => !visible)}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="11" cy="11" r="6.5" />
-            <path d="m16 16 4 4" />
-          </svg>
-        </button>
       </div>
-      {showSearch && (
-        <div className="mobile-search">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="11" cy="11" r="6.5" />
-            <path d="m16 16 4 4" />
-          </svg>
-          <input type="search" placeholder="Tìm kiếm sticker..." autoFocus />
-        </div>
-      )}
       <Link className="logo" to="/app">
         Stick<span>AI</span>
       </Link>
@@ -124,7 +101,7 @@ export default function Header({ user, transparent = false }) {
                 Lịch sử
               </NavLink>
               {user.role === "admin" && (
-                  <NavLink to="/admin/users" onClick={() => setShowSidebar(false)}>
+                <NavLink to="/admin/users" onClick={() => setShowSidebar(false)}>
                   Admin
                 </NavLink>
               )}
