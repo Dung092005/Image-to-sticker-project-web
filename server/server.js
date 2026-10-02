@@ -1,3 +1,4 @@
+// IMPORT + PATH 
 import { createServer } from "node:http";
 import { randomBytes } from "node:crypto";
 import { readFile, writeFile, mkdir, unlink } from "node:fs/promises";
@@ -31,7 +32,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const projectFolder = path.join(here, "..");
 const uploadsFolder = path.join(here, "uploads");
 const generatedFolder = path.join(here, "generated");
-
+// LOAD ENV + CONFIG
 async function loadEnvFiles() {
   for (const name of [".env.local", ".env"]) {
     const filePath = path.join(projectFolder, name);
@@ -126,7 +127,7 @@ function safeReturnTo(value) {
     ? value
     : "/app";
 }
-
+// LẤY THÔNG TIN GOOGLE
 async function exchangeGoogleCode(code) {
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -153,7 +154,7 @@ async function fetchGoogleUserInfo(accessToken) {
   if (!response.ok) throw new Error("Không lấy được thông tin tài khoản Google.");
   return response.json();
 }
-
+// HTTP HELPER
 function send(res, status, body, extraHeaders = {}, req = null) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
@@ -231,7 +232,7 @@ function imageType(data) {
   }
   return null;
 }
-
+// RUN PYTHON SCRIPT
 function runPython(args) {
   const python =
     process.env.STICKAI_PYTHON ||
@@ -294,7 +295,7 @@ async function generateSticker(job, card, outfit, additionalPrompt, image, mimeT
     await unlink(inputPath).catch(() => undefined);
   }
 }
-
+// SESSION
 function cookies(req) {
   return Object.fromEntries(
     (req.headers.cookie || "")
@@ -307,14 +308,14 @@ function cookies(req) {
 async function currentUser(req) {
   return getUserBySession(cookies(req).stickai_session);
 }
-
+// LOAD ENV + DB + SERVER
 await loadEnvFiles();
 writeGcpCredentialsFromEnv();
 await ensureSchema();
 await pingDatabase();
 
-const port = Number(process.env.PORT || 3000);
-
+const port = Number(process.env.PORT || 3001);
+// CREATE SERVER + ROUTE
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
 
@@ -381,7 +382,7 @@ createServer(async (req, res) => {
         return fail("google_not_configured");
       }
       if (!cookiesFromRequest.stickai_oauth_state ||
-          cookiesFromRequest.stickai_oauth_state !== url.searchParams.get("state")) {
+        cookiesFromRequest.stickai_oauth_state !== url.searchParams.get("state")) {
         return fail("state_mismatch");
       }
 
@@ -475,7 +476,7 @@ createServer(async (req, res) => {
         String(body.fields.accessories || "").trim() && `Phụ kiện: ${String(body.fields.accessories).trim()}`,
         String(body.fields.expression || "").trim() && `Biểu cảm/vibe: ${String(body.fields.expression).trim()}`,
         String(body.fields.customPrompt || "").trim() &&
-          `Phong cách / ý tưởng thêm (ưu tiên): ${String(body.fields.customPrompt).trim()}`,
+        `Phong cách / ý tưởng thêm (ưu tiên): ${String(body.fields.customPrompt).trim()}`,
       ].filter(Boolean).join("\n");
       if (additionalPrompt.length > 800) {
         return send(res, 400, { message: "Các tùy chọn bổ sung tối đa 800 ký tự." }, {}, req);
