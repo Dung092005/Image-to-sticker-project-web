@@ -66,6 +66,9 @@ Schema được chia thành các file SQL nhỏ và chạy theo thứ tự tên 
 4. `004_generated_stickers.sql` — các job/kết quả tạo sticker
 5. `005_remove_password_credentials.sql` — xóa các cột thông tin đăng nhập bằng mật khẩu khỏi `users`
 6. `006_remove_sticker_topic.sql` — xóa cột `topic` khỏi `sticker_cards`
+7. `007_fix_card_images.sql` — chuẩn hóa đường dẫn ảnh card danh mục
+8. `008_photorealistic_card_prompts.sql` — nâng cấp prompt tạo ảnh người thật photorealistic
+9. `009_flexible_style_card_prompts.sql` — linh hoạt phong cách nghệ thuật theo từng card và prompt người dùng
 
 Migration 005 xóa dữ liệu xác thực mật khẩu; các tài khoản cần đăng nhập bằng Google. Database được chia sẻ với Sticker-WEBAPP, nên ứng dụng đó cũng sẽ mất đăng nhập bằng mật khẩu nếu còn sử dụng các cột này.
 
@@ -75,16 +78,40 @@ Server ghi nhận file đã chạy trong bảng `schema_migrations`, nên lần 
 
 ## API contract
 
-| Method + path | Status | Ý nghĩa |
-| --- | --- | --- |
-| `POST /api/auth/logout` | 200 | Xoá session |
-| `GET /api/auth/me` | 200 / 401 | User hiện tại |
-| `GET /api/cards` | 200 | Danh sách bộ sticker |
-| `POST /api/generate` | 202 / 4xx | Nhận job tạo ảnh |
-| `GET /api/history` | 200 / 401 | Lịch sử của user |
-| `GET /api/generated/:id` | 200 / 404 | Ảnh PNG (chỉ owner) |
-| `GET /api/admin` | 200 / 403 | Users + cards |
-| `PUT /api/admin/cards/:id` | 200 / 403 | Admin sửa card |
+### 1. Xác thực & Người dùng (Authentication)
+
+| Method + path | Status | Quyền hạn | Ý nghĩa |
+| --- | --- | --- | --- |
+| `GET /api/auth/me` | 200 / 401 | Public / User | Lấy thông tin user hiện tại qua session cookie |
+| `GET /api/auth/google` | 302 | Public | Khởi tạo đăng nhập Google OAuth 2.0 (tạo state, gán cookie) |
+| `GET /api/auth/google/callback` | 302 | Public | Nhận code từ Google, xác thực state, tạo session |
+| `POST /api/auth/logout` | 200 | User | Đăng xuất, xóa session trong DB và hủy cookie |
+
+### 2. Nghiệp vụ Sticker
+
+| Method + path | Status | Quyền hạn | Ý nghĩa |
+| --- | --- | --- | --- |
+| `GET /api/cards` | 200 | Public | Lấy danh sách các bộ sticker mẫu |
+| `POST /api/generate` | 202 / 400 / 401 | User | Tiếp nhận ảnh upload và tạo job sinh sticker (xử lý ngầm qua Vertex AI) |
+| `GET /api/history` | 200 / 401 | User | Danh sách lịch sử sticker đã tạo của user |
+| `GET /api/generated/:id` | 200 / 404 | User (Owner) | Trả về file ảnh PNG kết quả (chỉ chính chủ mới xem được) |
+
+### 3. Quản trị hệ thống (Admin)
+
+| Method + path | Status | Quyền hạn | Ý nghĩa |
+| --- | --- | --- | --- |
+| `GET /api/admin` | 200 / 403 | Admin | Lấy toàn bộ danh sách users và sticker cards |
+| `PUT /api/admin/users/:id` | 200 / 400 / 403 / 404 | Admin | Admin cập nhật thông tin user (tên, email, role) |
+| `DELETE /api/admin/users/:id` | 200 / 400 / 403 / 404 | Admin | Admin xóa tài khoản user |
+| `POST /api/admin/cards` | 201 / 400 / 403 | Admin | Admin thêm mới một bộ sticker |
+| `PUT /api/admin/cards/:id` | 200 / 400 / 403 / 404 | Admin | Admin chỉnh sửa thông tin hoặc prompt của bộ sticker |
+| `DELETE /api/admin/cards/:id` | 200 / 403 / 404 | Admin | Admin xóa bộ sticker |
+
+### 4. Kỹ thuật & Giám sát
+
+| Method + path | Status | Quyền hạn | Ý nghĩa |
+| --- | --- | --- | --- |
+| `GET /api/health` | 200 | Public | Health check (kiểm tra trạng thái server & database) |
 
 ## Vertex AI
 
