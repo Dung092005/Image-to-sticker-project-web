@@ -1,12 +1,6 @@
 # StickAI — Personalized AI Sticker Sheet Generator
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-19.3.0-blue.svg)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-7.x-646CFF.svg)](https://vitejs.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-3ECF8E.svg)](https://supabase.com/)
-[![Google Vertex AI](https://img.shields.io/badge/Google_Cloud-Vertex_AI-4285F4.svg)](https://cloud.google.com/vertex-ai)
-[![Model](https://img.shields.io/badge/Model-Gemini_2.5_Flash_Image-8E75C4.svg)](https://deepmind.google/technologies/gemini/)
+
 
 > **StickAI** is a full-stack web application that transforms user portraits into a cohesive 16-sticker expression sheet using multimodal generative AI (**Google Gemini 2.5 Flash Image** on **Vertex AI**). Built with **React 19**, **Node.js**, **PostgreSQL (Supabase)**, and an asynchronous Python AI inference pipeline.
 
