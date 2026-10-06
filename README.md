@@ -421,8 +421,3 @@ The project includes a Dockerfile and a deployment guide for a Vercel frontend w
 ## License & Acknowledgments
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for complete details.
-
-### Academic & Project Team Acknowledgments
-- Developed as part of the Web Application Development curriculum (ICT Department).
-- Special thanks to **Google Cloud Vertex AI** for providing foundational model infrastructure.
-- Powered by open-source libraries: React, Vite, Node.js, and Supabase.
