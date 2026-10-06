@@ -21,7 +21,6 @@
 - [AI Pipeline & Prompt Engineering](#ai-pipeline--prompt-engineering)
 - [Production Deployment](#production-deployment)
 - [Troubleshooting & FAQ](#troubleshooting--faq)
-- [Contributing Guidelines](#contributing-guidelines)
 - [License & Acknowledgments](#license--acknowledgments)
 
 ---
@@ -416,17 +415,6 @@ docker run -p 3000:3000 --env-file .env.production stickai:latest
   STICKAI_PYTHON=C:\Users\<username>\AppData\Local\Programs\Python\Python312\python.exe
   ```
 
----
-
-## Contributing Guidelines
-
-1. **Branching Model:** Create feature branches off `develop` (e.g., `feature/custom-stickers` or `fix/oauth-redirect`).
-2. **Commit Conventions:** Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
-   - `feat:` New user-facing feature.
-   - `fix:` Bug fix.
-   - `refactor:` Code restructuring without behavioral changes.
-   - `docs:` Documentation improvements.
-3. **Pull Requests:** Ensure all migrations and scripts run cleanly before opening a PR to `develop`.
 
 ---
 
