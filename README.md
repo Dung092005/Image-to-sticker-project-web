@@ -343,7 +343,9 @@ Database evolution is managed via SQL migrations located in `server/migrations/`
 | `GET` | `/api/admin` | Admin | `200 OK` | Retrieves system telemetry, user rosters, and card configs. |
 | `PUT` | `/api/admin/users/:id` | Admin | `200 OK` | Updates user details or elevates roles. |
 | `DELETE`|`/api/admin/users/:id` | Admin | `200 OK` | Permanently deletes a user and cascades sessions/jobs. |
+| `POST`| `/api/admin/cards` | Admin | `201 Created` | Creates a new thematic sticker card. |
 | `PUT` | `/api/admin/cards/:id` | Admin | `200 OK` | Modifies sticker pack title, image, or AI prompts. |
+| `DELETE`|`/api/admin/cards/:id` | Admin | `200 OK` | Deletes a thematic sticker card. |
 
 ---
 
