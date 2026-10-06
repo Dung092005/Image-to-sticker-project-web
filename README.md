@@ -1,6 +1,12 @@
 # StickAI — Personalized AI Sticker Sheet Generator
 
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-19.3.0-blue.svg)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-7.x-646CFF.svg)](https://vitejs.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-3ECF8E.svg)](https://supabase.com/)
+[![Google Vertex AI](https://img.shields.io/badge/Google_Cloud-Vertex_AI-4285F4.svg)](https://cloud.google.com/vertex-ai)
+[![Model](https://img.shields.io/badge/Model-Gemini_2.5_Flash_Image-8E75C4.svg)](https://deepmind.google/technologies/gemini/)
 
 > **StickAI** is a full-stack web application that transforms user portraits into a cohesive 16-sticker expression sheet using multimodal generative AI (**Google Gemini 2.5 Flash Image** on **Vertex AI**). Built with **React 19**, **Node.js**, **PostgreSQL (Supabase)**, and an asynchronous Python AI inference pipeline.
 
@@ -9,6 +15,7 @@
 ## Table of Contents
 
 - [Abstract & Overview](#abstract--overview)
+- [Academic Project Information](#academic-project-information)
 - [System Architecture](#system-architecture)
 - [Key Features](#key-features)
 - [Technology Stack](#technology-stack)
@@ -33,6 +40,15 @@ The application addresses critical challenges in generative image synthesis:
 1. **Identity Consistency:** Preserving facial geometry, skin tone, hair color, and recognizable landmarks without distortion or uncanny artifacts.
 2. **Structural Regularity:** Enforcing a strict 3:4 aspect ratio, die-cut white borders, uniform spacing, and a clean white background.
 3. **Low-Latency User Experience:** Mitigating the 30–60 second latency of large image foundation models via an asynchronous job worker model with client-side short polling.
+
+---
+
+## Academic Project Information
+
+- **Project type:** Group project for the Web Application Development curriculum.
+- **Department:** ICT Department.
+- **Project scope:** A full-stack web application for creating personalized AI sticker sheets, including authentication, sticker-card management, generation history, and an administration dashboard.
+- **Team members and responsibilities:** Add the verified names, student IDs, and assigned responsibilities here before submission.
 
 ---
 
@@ -88,14 +104,11 @@ The following diagram illustrates the end-to-end data flow and architectural tie
 
 ## Key Features
 
-- **Multimodal Facial Identity Retention:** Uses Google Gemini's multimodal visual grounding to synthesize new artistic stickers while maintaining 100% facial recognizability from the user's reference photo.
-- **Dynamic Artistic Style Control:** Supports photorealistic personae, 3D Chibi / Pixar aesthetic, and classic anime illustration through fine-tuned prompt directives.
-- **Non-blocking Asynchronous Job Pipeline:** The web server immediately issues `HTTP 202 Accepted` with a `jobId`, delegating image generation to background Python workers. The client monitors progress via adaptive short polling every 2.5 seconds.
-- **Enterprise-Grade Authentication:** Passwordless Google OAuth 2.0 integration with cryptographically secure, HttpOnly, SameSite session cookies.
-- **Defensive Frontend Architecture:**
-  - Zero-latency client-side photo previews using `URL.createObjectURL` and deterministic memory disposal via `URL.revokeObjectURL`.
-  - Double-submit guards to eliminate duplicate cloud spending.
-  - React Error Boundaries preventing full-page crashes.
+- **Multimodal Facial Identity Retention:** Uses Google Gemini's multimodal visual grounding to help preserve key facial characteristics from the user's reference photo.
+- **Dynamic Artistic Style Control:** Supports photorealistic, 3D chibi, and anime-style sticker generation through theme prompts and optional user instructions.
+- **Asynchronous Job Pipeline:** The web server returns `HTTP 202 Accepted` with a `jobId`, then delegates image generation to a background Python worker. The client polls every 2.5 seconds while a job is processing.
+- **Authentication:** Passwordless Google OAuth 2.0 integration with HttpOnly, SameSite session cookies.
+- **Frontend Reliability:** Client-side photo previews use `URL.createObjectURL` with cleanup through `URL.revokeObjectURL`; submit-state controls help prevent duplicate requests; an Error Boundary displays interface errors without crashing the entire page.
 - **Role-Based Access Control (RBAC):** Administrative dashboard for user lifecycle management, usage telemetry, and dynamic sticker card prompt editing.
 
 ---
@@ -105,14 +118,14 @@ The following diagram illustrates the end-to-end data flow and architectural tie
 | Layer | Technology | Version | Purpose |
 | :--- | :--- | :--- | :--- |
 | **Frontend UI** | React | 19.3.0 | Modern Single-Page Application (SPA) framework |
-| **Routing** | React Router DOM | 6.30.1 | Client-side routing with Public & Protected guards |
-| **Bundler & Tooling** | Vite | 7.1.5 | Ultra-fast HMR and build optimization |
-| **Backend Runtime** | Node.js | >= 20.x | Native HTTP core server without external framework bloat |
-| **Database** | PostgreSQL / Supabase | 15+ | Relational data persistence, connection pooling |
-| **Database Driver** | `pg` (node-postgres) | 8.16.x | PostgreSQL client and connection pool management |
+| **Routing** | React Router DOM | 6.30.1 | Client-side routing with public and protected route components |
+| **Bundler & Tooling** | Vite | 7.1.5 | Development server and production build tool |
+| **Backend Runtime** | Node.js | 20+ (Docker uses 22) | Native HTTP server and API routing |
+| **Database** | PostgreSQL / Supabase | — | Relational data persistence and connection pooling |
+| **Database Driver** | `pg` (node-postgres) | ^8.23.0 | PostgreSQL client and connection pool management |
 | **AI Inference** | Python | >= 3.10 | Multimodal worker script invocation |
 | **Google Cloud SDK** | `google-genai` | >= 1.0.0 | Official Google GenAI SDK for Vertex AI |
-| **Environment Mgmt** | `dotenv` / `python-dotenv` | 1.0.x | Secure local configuration injection |
+| **Environment Mgmt** | Custom Node.js loader / `python-dotenv` | `python-dotenv` >= 1.0.0 | Loads local environment configuration |
 | **Authentication** | Google OAuth 2.0 | OpenID | Secure third-party identity verification |
 
 ---
@@ -181,7 +194,7 @@ Before running the project locally, verify your system meets the following requi
 2. **Python**: `3.10` to `3.12` installed and added to your system `PATH` ([Download Python](https://www.python.org/)).
 3. **Google Cloud Platform (GCP)** Account with:
    - An active project with **Vertex AI API** enabled.
-   - Quota allocated for image foundation models (`gemini-2.5-flash-image` or `imagen-3.0-generate-002`).
+    - Quota allocated for the configured Gemini image model (`gemini-2.5-flash-image`).
    - Authenticated environment via Google Cloud SDK (`gcloud auth application-default login`).
 4. **PostgreSQL Database**:
    - A hosted Supabase project or any standard PostgreSQL instance.
@@ -382,19 +395,7 @@ response = client.models.generate_content(
 
 ## Production Deployment
 
-### Option A: Containerized Deployment (Docker)
-
-Build and run using the optimized multi-stage `Dockerfile`:
-
-```bash
-docker build -t stickai:latest .
-docker run -p 3000:3000 --env-file .env.production stickai:latest
-```
-
-### Option B: Split PaaS (Vercel + Render / Cloud Run)
-
-1. **Frontend on Vercel:** Deploy the `web/` directory. Configure `vercel.json` rewrites to proxy `/api/:path*` directly to your backend domain.
-2. **Backend on Render / Cloud Run:** Deploy the root directory with Node 20 and Python 3 installed. Inject the `GOOGLE_APPLICATION_CREDENTIALS_JSON` environment variable containing your Google service account credentials.
+The project includes a Dockerfile and a deployment guide for a Vercel frontend with a Render backend. See [DEPLOY.md](DEPLOY.md) for the complete deployment sequence and required production environment variables.
 
 ---
 
@@ -414,7 +415,6 @@ docker run -p 3000:3000 --env-file .env.production stickai:latest
   ```bash
   STICKAI_PYTHON=C:\Users\<username>\AppData\Local\Programs\Python\Python312\python.exe
   ```
-
 
 ---
 
